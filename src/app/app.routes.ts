@@ -25,6 +25,28 @@ export const routes: Routes = [
 		canActivate: [authGuard]
 	},
 	{
+		path: 'groups',
+		canActivate: [authGuard],
+		children: [
+			{
+				path: '',
+				loadComponent: () => import('./components/groups/groups-list/groups-list.component').then(m => m.GroupsListComponent)
+			},
+			{
+				path: 'create',
+				loadComponent: () => import('./components/groups/group-form/group-form.component').then(m => m.GroupFormComponent)
+			},
+			{
+				path: ':id',
+				loadComponent: () => import('./components/groups/group-detail/group-detail.component').then(m => m.GroupDetailComponent)
+			},
+			{
+				path: ':id/edit',
+				loadComponent: () => import('./components/groups/group-form/group-form.component').then(m => m.GroupFormComponent)
+			}
+		]
+	},
+	{
 		path: '**',
 		redirectTo: 'home'
 	}

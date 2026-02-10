@@ -1,0 +1,164 @@
+<div class="group-detail-container">
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Caricamento...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button (click)="loadGroup(group?.id || 0)" *ngIf="group">Riprova</button>
+  </div>
+
+  <div *ngIf="group && !loading" class="group-content">
+    <!-- Cover Image -->
+    <div
+      class="group-cover"
+      [style.background-image]="group.coverImageUrl ? 'url(' + group.coverImageUrl + ')' : ''"
+    >
+      <div class="cover-overlay">
+        <div class="cover-content">
+          <h1>{{ group.name }}</h1>
+          <div class="group-meta">
+            <div class="meta-item">
+              <i class="icon-calendar"></i>
+              <span *ngIf="group.vacationStartDate && group.vacationEndDate">
+                {{ formatDate(group.vacationStartDate) }} - {{ formatDate(group.vacationEndDate) }}
+              </span>
+              <span *ngIf="!group.vacationStartDate || !group.vacationEndDate">
+                Date non specificate
+              </span>
+            </div>
+            <div class="meta-item">
+              <i class="icon-users"></i>
+              <span
+                >{{ group.memberCount }} {{ group.memberCount === 1 ? 'membro' : 'membri' }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="actions-bar">
+      <button class="btn-secondary" (click)="editGroup()" *ngIf="isAdmin()">
+        <i class="icon-edit"></i>
+        Modifica
+      </button>
+      <button class="btn-danger" (click)="showDeleteConfirm = true" *ngIf="isAdmin()">
+        <i class="icon-trash"></i>
+        Elimina
+      </button>
+      <button class="btn-secondary" (click)="leaveGroup()" *ngIf="!isAdmin()">
+        <i class="icon-exit"></i>
+        Abbandona
+      </button>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" *ngIf="showDeleteConfirm">
+      <div class="modal-content">
+        <h2>Conferma Eliminazione</h2>
+        <p>Sei sicuro di voler eliminare questo gruppo? Questa azione è irreversibile.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="showDeleteConfirm = false">Annulla</button>
+          <button class="btn-danger" (click)="deleteGroup()">Elimina</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Info -->
+    <div class="group-info-section">
+      <div class="info-card">
+        <h2>Informazioni</h2>
+
+        <div class="info-item" *ngIf="group.description">
+          <label>Descrizione</label>
+          <p>{{ group.description }}</p>
+        </div>
+
+        <div class="info-item">
+          <label>Creato da</label>
+          <div class="creator-info">
+            <img
+              *ngIf="group.createdBy.avatarUrl"
+              [src]="group.createdBy.avatarUrl"
+              [alt]="group.createdBy.name"
+            />
+            <div *ngIf="!group.createdBy.avatarUrl" class="avatar-placeholder">
+              {{ group.createdBy.name.charAt(0).toUpperCase() }}
+            </div>
+            <div>
+              <div class="creator-name">{{ group.createdBy.name }}</div>
+              <div class="creator-email">{{ group.createdBy.email }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label>Creato il</label>
+          <p>{{ formatDateTime(group.createdAt) }}</p>
+        </div>
+
+        <div class="info-item" *ngIf="group.updatedAt !== group.createdAt">
+          <label>Ultima modifica</label>
+          <p>{{ formatDateTime(group.updatedAt) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Section -->
+    <div class="members-section">
+      <div class="section-header">
+        <h2>Membri ({{ group.members?.length || 0 }})</h2>
+        <button class="btn-primary" *ngIf="isAdmin()">
+          <i class="icon-plus"></i>
+          Aggiungi Membro
+        </button>
+      </div>
+
+      <div class="members-grid">
+        <div *ngFor="let member of group.members" class="member-card">
+          <img
+            *ngIf="member.user.avatarUrl"
+            [src]="member.user.avatarUrl"
+            [alt]="member.user.name"
+          />
+          <div *ngIf="!member.user.avatarUrl" class="avatar-placeholder-large">
+            {{ member.user.name.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="member-info">
+            <div class="member-name">{{ member.user.name }}</div>
+            <div class="member-email">{{ member.user.email }}</div>
+            <div class="member-role" [class.admin]="member.role === GroupRole.ADMIN">
+              {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+            </div>
+            <div class="member-joined">Entrato il {{ formatDate(member.joinedAt) }}</div>
+          </div>
+
+          <div class="member-actions" *ngIf="isAdmin()">
+            <button
+              class="btn-icon"
+              (click)="toggleMemberRole(member)"
+              [title]="member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'"
+            >
+              <i class="icon-shield"></i>
+            </button>
+            <button
+              class="btn-icon btn-danger"
+              (click)="removeMember(member)"
+              title="Rimuovi dal gruppo"
+            >
+              <i class="icon-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!group.members || group.members.length === 0" class="no-members">
+        <p>Nessun membro nel gruppo</p>
+      </div>
+    </div>
+  </div>
+</div>

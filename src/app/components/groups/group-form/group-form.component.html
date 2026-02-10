@@ -1,0 +1,193 @@
+<div class="group-form-container">
+  <div class="header">
+    <h1>{{ isEditMode ? 'Modifica Gruppo' : 'Crea Nuovo Gruppo' }}</h1>
+  </div>
+
+  <div *ngIf="loading && isEditMode" class="loading">
+    <div class="spinner"></div>
+    <p>Caricamento...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <form [formGroup]="groupForm" (ngSubmit)="onSubmit()" *ngIf="!loading || !isEditMode">
+    <div class="form-section">
+      <h2>Informazioni Gruppo</h2>
+
+      <div class="form-group">
+        <label for="name">Nome Gruppo *</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="es. Vacanze Estate 2026"
+          [class.error]="groupForm.get('name')?.invalid && groupForm.get('name')?.touched"
+        />
+        <div
+          class="error-text"
+          *ngIf="groupForm.get('name')?.invalid && groupForm.get('name')?.touched"
+        >
+          <span *ngIf="groupForm.get('name')?.errors?.['required']">Il nome è obbligatorio</span>
+          <span *ngIf="groupForm.get('name')?.errors?.['minlength']"
+            >Il nome deve essere di almeno 3 caratteri</span
+          >
+          <span *ngIf="groupForm.get('name')?.errors?.['maxlength']"
+            >Il nome non può superare 200 caratteri</span
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descrizione</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Descrivi il tuo gruppo..."
+          [class.error]="
+            groupForm.get('description')?.invalid && groupForm.get('description')?.touched
+          "
+        ></textarea>
+        <div
+          class="error-text"
+          *ngIf="groupForm.get('description')?.invalid && groupForm.get('description')?.touched"
+        >
+          <span *ngIf="groupForm.get('description')?.errors?.['maxlength']"
+            >La descrizione non può superare 2000 caratteri</span
+          >
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="vacationStartDate">Data Inizio</label>
+          <input id="vacationStartDate" type="date" formControlName="vacationStartDate" />
+        </div>
+
+        <div class="form-group">
+          <label for="vacationEndDate">Data Fine</label>
+          <input id="vacationEndDate" type="date" formControlName="vacationEndDate" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="coverImageUrl">URL Immagine Copertina</label>
+        <input
+          id="coverImageUrl"
+          type="url"
+          formControlName="coverImageUrl"
+          placeholder="https://esempio.com/immagine.jpg"
+          [class.error]="
+            groupForm.get('coverImageUrl')?.invalid && groupForm.get('coverImageUrl')?.touched
+          "
+        />
+        <div
+          class="error-text"
+          *ngIf="groupForm.get('coverImageUrl')?.invalid && groupForm.get('coverImageUrl')?.touched"
+        >
+          <span *ngIf="groupForm.get('coverImageUrl')?.errors?.['maxlength']"
+            >L'URL non può superare 500 caratteri</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section" *ngIf="!isEditMode">
+      <h2>Membri del Gruppo</h2>
+      <p class="section-description">Cerca e aggiungi membri al gruppo tramite username o email</p>
+
+      <div class="form-group search-container">
+        <label for="memberSearch">Cerca Utenti</label>
+        <div class="search-input-wrapper">
+          <input
+            id="memberSearch"
+            type="text"
+            formControlName="memberSearch"
+            placeholder="Cerca per username o email..."
+            (focus)="showSearchResults = true"
+            (blur)="hideSearchResults()"
+          />
+          <div class="search-spinner" *ngIf="searching">
+            <div class="spinner-small"></div>
+          </div>
+        </div>
+
+        <div class="search-results" *ngIf="showSearchResults && searchResults.length > 0">
+          <div
+            *ngFor="let user of searchResults"
+            class="search-result-item"
+            (click)="selectUser(user)"
+          >
+            <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" [alt]="user.name" />
+            <div *ngIf="!user.avatarUrl" class="avatar-placeholder">
+              {{ user.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-email">{{ user.email }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="search-no-results"
+          *ngIf="
+            showSearchResults &&
+            searchResults.length === 0 &&
+            groupForm.get('memberSearch')?.value &&
+            !searching
+          "
+        >
+          <p>Nessun utente trovato</p>
+        </div>
+      </div>
+
+      <div class="selected-members" *ngIf="selectedMembers.length > 0">
+        <h3>Membri Selezionati ({{ selectedMembers.length }})</h3>
+        <div class="members-list">
+          <div *ngFor="let member of selectedMembers" class="member-item">
+            <img
+              *ngIf="member.user.avatarUrl"
+              [src]="member.user.avatarUrl"
+              [alt]="member.user.name"
+            />
+            <div *ngIf="!member.user.avatarUrl" class="avatar-placeholder">
+              {{ member.user.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="member-info">
+              <div class="member-name">{{ member.user.name }}</div>
+              <div class="member-email">{{ member.user.email }}</div>
+            </div>
+            <div class="member-actions">
+              <button
+                type="button"
+                class="role-toggle"
+                (click)="toggleRole(member.user.id)"
+                [class.admin]="member.role === GroupRole.ADMIN"
+              >
+                {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+              </button>
+              <button
+                type="button"
+                class="btn-remove"
+                (click)="removeMember(member.user.id)"
+                title="Rimuovi"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cancel()">Annulla</button>
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{ loading ? 'Salvataggio...' : isEditMode ? 'Salva Modifiche' : 'Crea Gruppo' }}
+      </button>
+    </div>
+  </form>
+</div>

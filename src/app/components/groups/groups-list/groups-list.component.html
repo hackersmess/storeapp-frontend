@@ -1,0 +1,69 @@
+<div class="groups-container">
+  <div class="header">
+    <h1>I Miei Gruppi</h1>
+    <button class="btn-primary" (click)="createGroup()">➕ Crea Nuovo Gruppo</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Caricamento gruppi...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button (click)="loadGroups()">Riprova</button>
+  </div>
+
+  <div *ngIf="!loading && !error" class="groups-grid">
+    <div *ngIf="groups.length === 0" class="no-groups">
+      <p style="font-size: 3rem">👥</p>
+      <h2>Nessun gruppo trovato</h2>
+      <p>Crea il tuo primo gruppo per iniziare a organizzare le vacanze!</p>
+      <button class="btn-primary" (click)="createGroup()">Crea Gruppo</button>
+    </div>
+
+    <div *ngFor="let group of groups" class="group-card" (click)="viewGroup(group.id)">
+      <div
+        class="group-cover"
+        [style.background-image]="group.coverImageUrl ? 'url(' + group.coverImageUrl + ')' : ''"
+      >
+        <div class="group-overlay">
+          <h3>{{ group.name }}</h3>
+        </div>
+      </div>
+
+      <div class="group-info">
+        <p class="description" *ngIf="group.description">{{ group.description }}</p>
+
+        <div class="group-meta">
+          <div class="meta-item">
+            <span>📅</span>
+            <span *ngIf="group.vacationStartDate && group.vacationEndDate">
+              {{ formatDate(group.vacationStartDate) }} - {{ formatDate(group.vacationEndDate) }}
+            </span>
+            <span *ngIf="!group.vacationStartDate || !group.vacationEndDate">
+              Date non specificate
+            </span>
+          </div>
+
+          <div class="meta-item">
+            <span>👥</span>
+            <span>{{ group.memberCount }} {{ group.memberCount === 1 ? 'membro' : 'membri' }}</span>
+          </div>
+        </div>
+
+        <div class="group-creator">
+          <img
+            *ngIf="group.createdBy.avatarUrl"
+            [src]="group.createdBy.avatarUrl"
+            [alt]="group.createdBy.name"
+          />
+          <div *ngIf="!group.createdBy.avatarUrl" class="avatar-placeholder">
+            {{ group.createdBy.name.charAt(0).toUpperCase() }}
+          </div>
+          <span>Creato da {{ group.createdBy.name }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
