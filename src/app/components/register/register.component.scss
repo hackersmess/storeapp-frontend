@@ -1,0 +1,31 @@
+// Usa gli stessi stili di login
+@use '../login/login.component.scss' as *;
+
+// Override specifici per register
+.register-container {
+  @extend .login-container;
+}
+
+.register-card {
+  @extend .login-card;
+  max-width: 450px;
+}
+
+.register-header {
+  @extend .login-header;
+}
+
+.register-form {
+  @extend .login-form;
+}
+
+.register-footer {
+  @extend .login-footer;
+}
+
+.hint-text {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
