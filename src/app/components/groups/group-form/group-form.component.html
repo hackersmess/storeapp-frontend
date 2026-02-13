@@ -98,7 +98,7 @@
         </div>
       </div>
 
-      @if (!isEditMode) {
+      @if (!isEditMode()) {
         <div class="form-section">
           <h2>Membri del Gruppo</h2>
           <p class="section-description">
@@ -202,8 +202,8 @@
 
       <div class="form-actions">
         <button type="button" class="btn-secondary" (click)="cancel()">Annulla</button>
-        <button type="submit" class="btn-primary" [disabled]="loading">
-          {{ loading ? 'Salvataggio...' : isEditMode ? 'Salva Modifiche' : 'Crea Gruppo' }}
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Salvataggio...' : isEditMode() ? 'Salva Modifiche' : 'Crea Gruppo' }}
         </button>
       </div>
     </form>

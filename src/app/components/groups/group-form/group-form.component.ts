@@ -1,20 +1,10 @@
-import { CommonModule } from '@angular/comm	ngOnInit() {
-		this.initForm();
-		this.setupSearch();
-
-		this.route.params.subscribe(params => {
-			if (params['id']) {
-				this.groupId = +params['id'];
-				this.isEditMode.set(true);
-				this.loadGroup();
-			}
-		});
-	}mponent, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { AddMemberRequest, GroupRole } from '../../../models/group.model';
+import { GroupRole } from '../../../models/group.model';
 import { User, UserBasic } from '../../../models/user.model';
 import { GroupService } from '../../../services/group.service';
 
@@ -33,7 +23,7 @@ export class GroupFormComponent implements OnInit {
 
 	groupForm!: FormGroup;
 	groupId: number | null = null;
-	
+
 	// Signals per stato reattivo
 	isEditMode = signal(false);
 	loading = signal(false);
@@ -52,19 +42,14 @@ export class GroupFormComponent implements OnInit {
 	GroupRole = GroupRole;
 
 	ngOnInit() {
-		console.log(' GroupFormComponent ngOnInit');
 		this.initForm();
 		this.setupSearch();
 
 		this.route.params.subscribe(params => {
-			console.log(' Route params:', params);
 			if (params['id']) {
 				this.groupId = +params['id'];
-				this.isEditMode = true;
-				console.log(' Edit mode activated, groupId:', this.groupId);
+				this.isEditMode.set(true);
 				this.loadGroup();
-			} else {
-				console.log('Create mode');
 			}
 		});
 	}
