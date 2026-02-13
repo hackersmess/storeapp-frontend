@@ -58,87 +58,189 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal" *ngIf="showDeleteConfirm()">
-      <div class="modal-content">
-        <h2>Conferma Eliminazione</h2>
-        <p>Sei sicuro di voler eliminare questo gruppo? Questa azione è irreversibile.</p>
-        <div class="modal-actions">
-          <button class="btn-secondary" (click)="showDeleteConfirm.set(false)">Annulla</button>
-          <button class="btn-danger" (click)="deleteGroup()">Elimina</button>
-        </div>
-      </div>
-    </div>
+    <app-confirm-dialog
+      [show]="showDeleteConfirm()"
+      title="Conferma Eliminazione"
+      message="Sei sicuro di voler eliminare questo gruppo? Questa azione è irreversibile."
+      confirmText="Elimina"
+      cancelText="Annulla"
+      confirmButtonClass="btn-danger"
+      [loading]="confirmLoading()"
+      (confirm)="deleteGroup()"
+      (cancel)="showDeleteConfirm.set(false)"
+    ></app-confirm-dialog>
 
-    <!-- Add Member Modal -->
+    <!-- Leave Group Confirmation Modal -->
+    <app-confirm-dialog
+      [show]="showLeaveGroupConfirm()"
+      title="Abbandona Gruppo"
+      message="Sei sicuro di voler abbandonare questo gruppo?"
+      confirmText="Abbandona"
+      cancelText="Annulla"
+      confirmButtonClass="btn-danger"
+      [loading]="confirmLoading()"
+      (confirm)="confirmLeaveGroup()"
+      (cancel)="showLeaveGroupConfirm.set(false)"
+    ></app-confirm-dialog>
+
+    <!-- Remove Member Confirmation Modal -->
+    <app-confirm-dialog
+      [show]="showRemoveMemberConfirm()"
+      [title]="'Rimuovi ' + (memberToRemove?.user.name || 'membro')"
+      [message]="
+        'Sei sicuro di voler rimuovere ' +
+        (memberToRemove?.user.name || 'questo membro') +
+        ' dal gruppo?'
+      "
+      confirmText="Rimuovi"
+      cancelText="Annulla"
+      confirmButtonClass="btn-danger"
+      [loading]="confirmLoading()"
+      (confirm)="confirmRemoveMember()"
+      (cancel)="showRemoveMemberConfirm.set(false); memberToRemove = null"
+    ></app-confirm-dialog>
+
+    <!--Add Member Modal -->
     <div class="modal" *ngIf="showAddMemberModal()">
       <div class="modal-content add-member-modal">
-        <h2>Aggiungi Membro</h2>
+        <div class="modal-header">
+          <h2>Aggiungi Membro</h2>
+          <button class="btn-close" (click)="closeAddMemberModal()" [disabled]="addingMember">
+            ×
+          </button>
+        </div>
 
-        <form [formGroup]="memberSearchForm">
+        <!-- Search Input with Inline Results (same style as group-form) -->
+        <div class="search-container">
           <div class="form-group">
             <label for="search">Cerca utente</label>
-            <input
-              type="text"
-              id="search"
-              formControlName="search"
-              placeholder="Cerca per nome o email..."
-              autocomplete="off"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="role">Ruolo</label>
-            <select id="role" formControlName="role">
-              <option [value]="GroupRole.MEMBER">Membro</option>
-              <option [value]="GroupRole.ADMIN">Admin</option>
-            </select>
-          </div>
-
-          <div class="search-results" *ngIf="searching || searchResults.length > 0">
-            <div *ngIf="searching" class="searching">
-              <div class="spinner-small"></div>
-              Ricerca in corso...
+            <div class="search-input-wrapper">
+              <input
+                type="text"
+                id="search"
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange($event)"
+                placeholder="Cerca per nome o email..."
+                autocomplete="off"
+                (focus)="showSearchResults = true"
+                (blur)="hideSearchResults()"
+              />
+              <div *ngIf="searching" class="search-spinner">
+                <div class="spinner-small"></div>
+              </div>
             </div>
+          </div>
 
-            <div *ngIf="!searching && searchResults.length > 0" class="results-list">
+          <!-- Search Results Dropdown -->
+          <div *ngIf="showSearchResults && searchResults.length > 0" class="search-results">
+            <div
+              *ngFor="let user of searchResults"
+              class="search-result-item"
+              (click)="selectUserToAdd(user)"
+            >
+              <img
+                *ngIf="user.avatarUrl"
+                [src]="user.avatarUrl"
+                [alt]="user.name"
+                class="user-avatar"
+              />
+              <div *ngIf="!user.avatarUrl" class="avatar-placeholder">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </div>
+              <div class="user-info">
+                <div class="user-name">{{ user.name }}</div>
+                <div class="user-email">{{ user.email }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Results -->
+          <div
+            *ngIf="
+              showSearchResults &&
+              searchResults.length === 0 &&
+              searchQuery &&
+              searchQuery.length >= 2 &&
+              !searching
+            "
+            class="search-no-results"
+          >
+            <p>Nessun utente disponibile trovato</p>
+          </div>
+        </div>
+
+        <!-- Selected User Preview (before adding) -->
+        <div *ngIf="selectedUserToAdd" class="selected-user-preview">
+          <h3>Utente selezionato:</h3>
+          <div class="user-preview-card">
+            <img
+              *ngIf="selectedUserToAdd.avatarUrl"
+              [src]="selectedUserToAdd.avatarUrl"
+              [alt]="selectedUserToAdd.name"
+            />
+            <div *ngIf="!selectedUserToAdd.avatarUrl" class="avatar-placeholder">
+              {{ selectedUserToAdd.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ selectedUserToAdd.name }}</div>
+              <div class="user-email">{{ selectedUserToAdd.email }}</div>
+            </div>
+            <button class="btn-remove-selection" (click)="clearSelectedUser()">×</button>
+          </div>
+
+          <!-- Role Selection -->
+          <div class="form-group">
+            <label>Ruolo</label>
+            <div
+              class="custom-select"
+              [class.open]="roleDropdownOpen"
+              (click)="toggleRoleDropdown()"
+            >
+              <div class="select-trigger">
+                <span>{{ selectedRole === GroupRole.ADMIN ? 'Admin' : 'Membro' }}</span>
+                <span class="arrow">▼</span>
+              </div>
               <div
-                *ngFor="let user of searchResults"
-                class="result-item"
-                (click)="selectUserToAdd(user)"
+                class="select-options"
+                *ngIf="roleDropdownOpen"
+                (click)="$event.stopPropagation()"
               >
-                <img
-                  *ngIf="user.avatarUrl"
-                  [src]="user.avatarUrl"
-                  [alt]="user.name"
-                  class="user-avatar-small"
-                />
-                <div *ngIf="!user.avatarUrl" class="avatar-placeholder-small">
-                  {{ user.name.charAt(0).toUpperCase() }}
+                <div
+                  class="select-option"
+                  [class.selected]="selectedRole === GroupRole.MEMBER"
+                  (click)="selectRole(GroupRole.MEMBER)"
+                >
+                  Membro
                 </div>
-                <div class="user-info-small">
-                  <div class="user-name">{{ user.name }}</div>
-                  <div class="user-email">{{ user.email }}</div>
+                <div
+                  class="select-option"
+                  [class.selected]="selectedRole === GroupRole.ADMIN"
+                  (click)="selectRole(GroupRole.ADMIN)"
+                >
+                  Admin
                 </div>
               </div>
             </div>
-
-            <div
-              *ngIf="
-                !searching &&
-                searchResults.length === 0 &&
-                memberSearchForm.get('search')?.value?.length >= 2
-              "
-              class="no-results"
-            >
-              Nessun utente disponibile trovato
-            </div>
           </div>
-        </form>
 
-        <div class="modal-actions">
-          <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
-            Annulla
-          </button>
+          <!-- Add Button -->
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
+              Annulla
+            </button>
+            <button class="btn-primary" (click)="confirmAddMember()" [disabled]="addingMember">
+              <span *ngIf="!addingMember">Aggiungi</span>
+              <span *ngIf="addingMember">
+                <div class="spinner-small"></div>
+                Aggiunta in corso...
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Close Button (when no user selected) -->
+        <div *ngIf="!selectedUserToAdd" class="modal-actions">
+          <button class="btn-secondary" (click)="closeAddMemberModal()">Chiudi</button>
         </div>
       </div>
     </div>

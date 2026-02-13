@@ -1,3 +1,5 @@
+import { UserBasic } from './user.model';
+
 export interface Group {
 	id: number;
 	name: string;
@@ -5,12 +7,7 @@ export interface Group {
 	vacationStartDate?: string;
 	vacationEndDate?: string;
 	coverImageUrl?: string;
-	createdBy: {
-		id: number;
-		email: string;
-		name: string;
-		avatarUrl?: string;
-	};
+	createdBy: UserBasic;
 	createdAt: string;
 	updatedAt: string;
 	memberCount: number;
@@ -20,12 +17,7 @@ export interface Group {
 export interface GroupMember {
 	id: number;
 	groupId: number;
-	user: {
-		id: number;
-		email: string;
-		name: string;
-		avatarUrl?: string;
-	};
+	user: UserBasic;
 	role: GroupRole;
 	joinedAt: string;
 }
@@ -41,6 +33,7 @@ export interface CreateGroupRequest {
 	vacationStartDate?: string;
 	vacationEndDate?: string;
 	coverImageUrl?: string;
+	members?: AddMemberRequest[]; // Lista opzionale di membri da aggiungere in creazione
 }
 
 export interface UpdateGroupRequest {

@@ -1,0 +1,28 @@
+<div class="modal-overlay" *ngIf="show" (click)="onBackdropClick($event)">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2>{{ title }}</h2>
+      <button class="btn-close" (click)="onCancel()" [disabled]="loading" type="button">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p>{{ message }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="onCancel()" [disabled]="loading" type="button">
+        {{ cancelText }}
+      </button>
+      <button
+        class="btn"
+        [class]="confirmButtonClass"
+        (click)="onConfirm()"
+        [disabled]="loading"
+        type="button"
+      >
+        <span *ngIf="!loading">{{ confirmText }}</span>
+        <span *ngIf="loading" class="spinner-small"></span>
+      </button>
+    </div>
+  </div>
+</div>

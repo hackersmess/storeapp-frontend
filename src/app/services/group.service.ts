@@ -80,6 +80,14 @@ export class GroupService {
 	}
 
 	/**
+	 * Aggiunge più membri al gruppo in una singola operazione atomica.
+	 * Se anche solo uno fallisce, l'intera operazione viene annullata (rollback).
+	 */
+	addMembers(groupId: number, requests: AddMemberRequest[]): Observable<GroupMember[]> {
+		return this.http.post<GroupMember[]>(`${this.apiUrl}/${groupId}/members/batch`, requests);
+	}
+
+	/**
 	 * Rimuove un membro dal gruppo
 	 */
 	removeMember(groupId: number, memberId: number): Observable<void> {
@@ -120,7 +128,6 @@ export class GroupService {
 
 	/**
 	 * Ottiene tutti gli utenti disponibili
-	 * @deprecated Usa getAvailableUsers(groupId) per evitare di mostrare utenti già membri
 	 */
 	getAllUsers(): Observable<User[]> {
 		return this.http.get<User[]>(this.usersApiUrl).pipe(
