@@ -4,25 +4,25 @@
     <button class="btn-primary" (click)="createGroup()">➕ Crea Nuovo Gruppo</button>
   </div>
 
-  <div *ngIf="loading" class="loading">
+  <div *ngIf="loading()" class="loading">
     <div class="spinner"></div>
     <p>Caricamento gruppi...</p>
   </div>
 
-  <div *ngIf="error" class="error-message">
-    {{ error }}
+  <div *ngIf="error()" class="error-message">
+    {{ error() }}
     <button (click)="loadGroups()">Riprova</button>
   </div>
 
-  <div *ngIf="!loading && !error" class="groups-grid">
-    <div *ngIf="groups.length === 0" class="no-groups">
+  <div *ngIf="!loading() && !error()" class="groups-grid">
+    <div *ngIf="groups().length === 0" class="no-groups">
       <p style="font-size: 3rem">👥</p>
       <h2>Nessun gruppo trovato</h2>
       <p>Crea il tuo primo gruppo per iniziare a organizzare le vacanze!</p>
       <button class="btn-primary" (click)="createGroup()">Crea Gruppo</button>
     </div>
 
-    <div *ngFor="let group of groups" class="group-card" (click)="viewGroup(group.id)">
+    <div *ngFor="let group of groups()" class="group-card" (click)="viewGroup(group.id)">
       <div
         class="group-cover"
         [style.background-image]="group.coverImageUrl ? 'url(' + group.coverImageUrl + ')' : ''"

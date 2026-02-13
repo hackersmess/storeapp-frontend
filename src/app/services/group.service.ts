@@ -31,7 +31,17 @@ export class GroupService {
 	 * Ottiene tutti i gruppi dell'utente corrente
 	 */
 	getMyGroups(): Observable<Group[]> {
-		return this.http.get<Group[]>(this.apiUrl);
+		console.log('GroupService: Fetching user groups from', this.apiUrl);
+		return this.http.get<Group[]>(this.apiUrl).pipe(
+			map(groups => {
+				console.log('GroupService: Received groups:', groups);
+				return groups;
+			}),
+			catchError(error => {
+				console.error('GroupService: Error fetching groups:', error);
+				throw error;
+			})
+		);
 	}
 
 	/**
@@ -110,11 +120,25 @@ export class GroupService {
 
 	/**
 	 * Ottiene tutti gli utenti disponibili
+	 * @deprecated Usa getAvailableUsers(groupId) per evitare di mostrare utenti già membri
 	 */
 	getAllUsers(): Observable<User[]> {
 		return this.http.get<User[]>(this.usersApiUrl).pipe(
 			catchError(error => {
 				console.error('Error fetching users:', error);
+				return of([]);
+			})
+		);
+	}
+
+	/**
+	 * Ottiene gli utenti disponibili da aggiungere al gruppo
+	 * (esclude gli utenti già membri del gruppo)
+	 */
+	getAvailableUsers(groupId: number): Observable<User[]> {
+		return this.http.get<User[]>(`${this.apiUrl}/${groupId}/available-users`).pipe(
+			catchError(error => {
+				console.error('Error fetching available users:', error);
 				return of([]);
 			})
 		);

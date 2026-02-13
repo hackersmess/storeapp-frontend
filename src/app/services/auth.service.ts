@@ -21,14 +21,39 @@ export class AuthService {
 	private readonly USER_KEY = 'current_user';
 
 	// Observable per lo stato dell'utente corrente
-	private currentUserSubject = new BehaviorSubject<UserDto | null>(this.getCurrentUser());
+	private currentUserSubject = new BehaviorSubject<UserDto | null>(null);
 	public currentUser$ = this.currentUserSubject.asObservable();
 
 	constructor() {
 		// Verifica token all'avvio (solo nel browser)
-		if (this.isBrowser && this.getToken() && !this.getCurrentUser()) {
-			// Token presente ma user mancante - logout
-			this.logout();
+		if (this.isBrowser) {
+			const token = localStorage.getItem(this.TOKEN_KEY);
+			const userJson = localStorage.getItem(this.USER_KEY);
+			const user = userJson ? JSON.parse(userJson) : null;
+
+			// Controlla se il token è scaduto
+			let tokenExpired = true;
+			if (token) {
+				try {
+					const payload = JSON.parse(atob(token.split('.')[1]));
+					const exp = payload.exp * 1000;
+					tokenExpired = Date.now() >= exp;
+				} catch (e) {
+					tokenExpired = true;
+				}
+			}
+
+			// Se c'è un token valido e non scaduto, e c'è un utente, carica l'utente
+			if (token && user && !tokenExpired) {
+				this.currentUserSubject.next(user);
+			} else if (token || user) {
+				// Se c'è un token scaduto o dati inconsistenti, pulisci localStorage
+				// ma NON fare redirect (lo farà l'authGuard se necessario)
+				localStorage.removeItem(this.TOKEN_KEY);
+				localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+				localStorage.removeItem(this.USER_KEY);
+				this.currentUserSubject.next(null);
+			}
 		}
 	}
 
@@ -76,6 +101,16 @@ export class AuthService {
 	 * Logout
 	 */
 	logout(): void {
+		this.clearAuthData();
+		// Redirect a login
+		this.router.navigate(['/login']);
+	}
+
+	/**
+	 * Pulisce i dati di autenticazione da localStorage e observable
+	 * (senza redirect - usato internamente)
+	 */
+	private clearAuthData(): void {
 		// Rimuovi dati da localStorage (solo nel browser)
 		if (this.isBrowser) {
 			localStorage.removeItem(this.TOKEN_KEY);
@@ -85,9 +120,6 @@ export class AuthService {
 
 		// Aggiorna observable
 		this.currentUserSubject.next(null);
-
-		// Redirect a login
-		this.router.navigate(['/login']);
 	}
 
 	/**

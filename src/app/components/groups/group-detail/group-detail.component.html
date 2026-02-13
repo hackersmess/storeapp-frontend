@@ -1,37 +1,39 @@
 <div class="group-detail-container">
-  <div *ngIf="loading" class="loading">
+  <div *ngIf="loading()" class="loading">
     <div class="spinner"></div>
     <p>Caricamento...</p>
   </div>
 
-  <div *ngIf="error" class="error-message">
-    {{ error }}
-    <button (click)="loadGroup(group?.id || 0)" *ngIf="group">Riprova</button>
+  <div *ngIf="error()" class="error-message">
+    {{ error() }}
+    <button (click)="loadGroup(group()?.id || 0)" *ngIf="group()">Riprova</button>
   </div>
 
-  <div *ngIf="group && !loading" class="group-content">
+  <div *ngIf="group() && !loading()" class="group-content">
     <!-- Cover Image -->
     <div
       class="group-cover"
-      [style.background-image]="group.coverImageUrl ? 'url(' + group.coverImageUrl + ')' : ''"
+      [style.background-image]="group()!.coverImageUrl ? 'url(' + group()!.coverImageUrl + ')' : ''"
     >
       <div class="cover-overlay">
         <div class="cover-content">
-          <h1>{{ group.name }}</h1>
+          <h1>{{ group()!.name }}</h1>
           <div class="group-meta">
             <div class="meta-item">
               <i class="icon-calendar"></i>
-              <span *ngIf="group.vacationStartDate && group.vacationEndDate">
-                {{ formatDate(group.vacationStartDate) }} - {{ formatDate(group.vacationEndDate) }}
+              <span *ngIf="group()!.vacationStartDate && group()!.vacationEndDate">
+                {{ formatDate(group()!.vacationStartDate) }} -
+                {{ formatDate(group()!.vacationEndDate) }}
               </span>
-              <span *ngIf="!group.vacationStartDate || !group.vacationEndDate">
+              <span *ngIf="!group()!.vacationStartDate || !group()!.vacationEndDate">
                 Date non specificate
               </span>
             </div>
             <div class="meta-item">
               <i class="icon-users"></i>
               <span
-                >{{ group.memberCount }} {{ group.memberCount === 1 ? 'membro' : 'membri' }}</span
+                >{{ group()!.memberCount }}
+                {{ group()!.memberCount === 1 ? 'membro' : 'membri' }}</span
               >
             </div>
           </div>
@@ -45,7 +47,7 @@
         <i class="icon-edit"></i>
         Modifica
       </button>
-      <button class="btn-danger" (click)="showDeleteConfirm = true" *ngIf="isAdmin()">
+      <button class="btn-danger" (click)="showDeleteConfirm.set(true)" *ngIf="isAdmin()">
         <i class="icon-trash"></i>
         Elimina
       </button>
@@ -56,13 +58,87 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal" *ngIf="showDeleteConfirm">
+    <div class="modal" *ngIf="showDeleteConfirm()">
       <div class="modal-content">
         <h2>Conferma Eliminazione</h2>
         <p>Sei sicuro di voler eliminare questo gruppo? Questa azione è irreversibile.</p>
         <div class="modal-actions">
-          <button class="btn-secondary" (click)="showDeleteConfirm = false">Annulla</button>
+          <button class="btn-secondary" (click)="showDeleteConfirm.set(false)">Annulla</button>
           <button class="btn-danger" (click)="deleteGroup()">Elimina</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div class="modal" *ngIf="showAddMemberModal()">
+      <div class="modal-content add-member-modal">
+        <h2>Aggiungi Membro</h2>
+
+        <form [formGroup]="memberSearchForm">
+          <div class="form-group">
+            <label for="search">Cerca utente</label>
+            <input
+              type="text"
+              id="search"
+              formControlName="search"
+              placeholder="Cerca per nome o email..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="role">Ruolo</label>
+            <select id="role" formControlName="role">
+              <option [value]="GroupRole.MEMBER">Membro</option>
+              <option [value]="GroupRole.ADMIN">Admin</option>
+            </select>
+          </div>
+
+          <div class="search-results" *ngIf="searching || searchResults.length > 0">
+            <div *ngIf="searching" class="searching">
+              <div class="spinner-small"></div>
+              Ricerca in corso...
+            </div>
+
+            <div *ngIf="!searching && searchResults.length > 0" class="results-list">
+              <div
+                *ngFor="let user of searchResults"
+                class="result-item"
+                (click)="selectUserToAdd(user)"
+              >
+                <img
+                  *ngIf="user.avatarUrl"
+                  [src]="user.avatarUrl"
+                  [alt]="user.name"
+                  class="user-avatar-small"
+                />
+                <div *ngIf="!user.avatarUrl" class="avatar-placeholder-small">
+                  {{ user.name.charAt(0).toUpperCase() }}
+                </div>
+                <div class="user-info-small">
+                  <div class="user-name">{{ user.name }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              *ngIf="
+                !searching &&
+                searchResults.length === 0 &&
+                memberSearchForm.get('search')?.value?.length >= 2
+              "
+              class="no-results"
+            >
+              Nessun utente disponibile trovato
+            </div>
+          </div>
+        </form>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
+            Annulla
+          </button>
         </div>
       </div>
     </div>
@@ -72,37 +148,37 @@
       <div class="info-card">
         <h2>Informazioni</h2>
 
-        <div class="info-item" *ngIf="group.description">
+        <div class="info-item" *ngIf="group()!.description">
           <label>Descrizione</label>
-          <p>{{ group.description }}</p>
+          <p>{{ group()!.description }}</p>
         </div>
 
         <div class="info-item">
           <label>Creato da</label>
           <div class="creator-info">
             <img
-              *ngIf="group.createdBy.avatarUrl"
-              [src]="group.createdBy.avatarUrl"
-              [alt]="group.createdBy.name"
+              *ngIf="group()!.createdBy.avatarUrl"
+              [src]="group()!.createdBy.avatarUrl"
+              [alt]="group()!.createdBy.name"
             />
-            <div *ngIf="!group.createdBy.avatarUrl" class="avatar-placeholder">
-              {{ group.createdBy.name.charAt(0).toUpperCase() }}
+            <div *ngIf="!group()!.createdBy.avatarUrl" class="avatar-placeholder">
+              {{ group()!.createdBy.name.charAt(0).toUpperCase() }}
             </div>
             <div>
-              <div class="creator-name">{{ group.createdBy.name }}</div>
-              <div class="creator-email">{{ group.createdBy.email }}</div>
+              <div class="creator-name">{{ group()!.createdBy.name }}</div>
+              <div class="creator-email">{{ group()!.createdBy.email }}</div>
             </div>
           </div>
         </div>
 
         <div class="info-item">
           <label>Creato il</label>
-          <p>{{ formatDateTime(group.createdAt) }}</p>
+          <p>{{ formatDateTime(group()!.createdAt) }}</p>
         </div>
 
-        <div class="info-item" *ngIf="group.updatedAt !== group.createdAt">
+        <div class="info-item" *ngIf="group()!.updatedAt !== group()!.createdAt">
           <label>Ultima modifica</label>
-          <p>{{ formatDateTime(group.updatedAt) }}</p>
+          <p>{{ formatDateTime(group()!.updatedAt) }}</p>
         </div>
       </div>
     </div>
@@ -110,15 +186,15 @@
     <!-- Members Section -->
     <div class="members-section">
       <div class="section-header">
-        <h2>Membri ({{ group.members?.length || 0 }})</h2>
-        <button class="btn-primary" *ngIf="isAdmin()">
+        <h2>Membri ({{ group()!.members?.length || 0 }})</h2>
+        <button class="btn-primary" *ngIf="isAdmin()" (click)="openAddMemberModal()">
           <i class="icon-plus"></i>
           Aggiungi Membro
         </button>
       </div>
 
       <div class="members-grid">
-        <div *ngFor="let member of group.members" class="member-card">
+        <div *ngFor="let member of group()!.members" class="member-card">
           <img
             *ngIf="member.user.avatarUrl"
             [src]="member.user.avatarUrl"
@@ -156,7 +232,7 @@
         </div>
       </div>
 
-      <div *ngIf="!group.members || group.members.length === 0" class="no-members">
+      <div *ngIf="!group()!.members || group()!.members.length === 0" class="no-members">
         <p>Nessun membro nel gruppo</p>
       </div>
     </div>

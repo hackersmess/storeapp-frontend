@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, PLATFORM_ID, signal, computed } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { GroupService } from '../../../services/group.service';
 import { Group } from '../../../models/group.model';
@@ -14,27 +14,46 @@ import { Group } from '../../../models/group.model';
 export class GroupsListComponent implements OnInit {
 	private groupService = inject(GroupService);
 	private router = inject(Router);
+	private platformId = inject(PLATFORM_ID);
+	private isBrowser = isPlatformBrowser(this.platformId);
 
-	groups: Group[] = [];
-	loading = false;
-	error: string | null = null;
+	// Signal per lo stato del componente
+	groups = signal<Group[]>([]);
+	loading = signal(false);
+	error = signal<string | null>(null);
+
+	// Computed signal - si aggiorna automaticamente quando groups cambia
+	hasGroups = computed(() => this.groups().length > 0);
+	groupCount = computed(() => this.groups().length);
 
 	ngOnInit() {
-		this.loadGroups();
+		// Carica i gruppi solo nel browser, non durante SSR
+		if (this.isBrowser) {
+			this.loadGroups();
+		}
 	}
 
 	loadGroups() {
-		this.loading = true;
-		this.error = null;
+		this.loading.set(true);
+		this.error.set(null);
 
+		console.log('GroupsListComponent: Starting loadGroups()');
 		this.groupService.getMyGroups().subscribe({
 			next: (groups) => {
-				this.groups = groups;
-				this.loading = false;
+				console.log('GroupsListComponent: Received groups:', groups);
+				this.groups.set(groups);
+				this.loading.set(false);
+				// ✅ NON serve più this.cdr.detectChanges()!
+				console.log('GroupsListComponent: Groups signal updated, count =', this.groupCount());
 			},
 			error: (err) => {
-				this.error = 'Errore nel caricamento dei gruppi';
-				this.loading = false;
+				console.error('GroupsListComponent: Error loading groups:', err);
+				this.error.set('Errore nel caricamento dei gruppi');
+				this.loading.set(false);
+				// ✅ NON serve più this.cdr.detectChanges()!
+			},
+			complete: () => {
+				console.log('GroupsListComponent: Observable completed');
 			}
 		});
 	}
