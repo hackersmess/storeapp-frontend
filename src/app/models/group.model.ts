@@ -4,8 +4,8 @@ export interface Group {
 	id: number;
 	name: string;
 	description?: string;
-	vacationStartDate?: string;
-	vacationEndDate?: string;
+	vacationStartDate: string; // OBBLIGATORIO - necessario per il calendario itinerario
+	vacationEndDate: string;   // OBBLIGATORIO - necessario per il calendario itinerario
 	coverImageUrl?: string;
 	createdBy: UserBasic;
 	createdAt: string;
@@ -30,8 +30,8 @@ export enum GroupRole {
 export interface CreateGroupRequest {
 	name: string;
 	description?: string;
-	vacationStartDate?: string;
-	vacationEndDate?: string;
+	vacationStartDate: string; // OBBLIGATORIO
+	vacationEndDate: string;   // OBBLIGATORIO
 	coverImageUrl?: string;
 	members?: AddMemberRequest[]; // Lista opzionale di membri da aggiungere in creazione
 }

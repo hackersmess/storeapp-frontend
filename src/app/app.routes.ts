@@ -43,6 +43,10 @@ export const routes: Routes = [
 			{
 				path: ':id/edit',
 				loadComponent: () => import('./components/groups/group-form/group-form.component').then(m => m.GroupFormComponent)
+			},
+			{
+				path: ':groupId/itinerary',
+				loadComponent: () => import('./components/itinerary/itinerary-detail/itinerary-detail.component').then(m => m.ItineraryDetailComponent)
 			}
 		]
 	},

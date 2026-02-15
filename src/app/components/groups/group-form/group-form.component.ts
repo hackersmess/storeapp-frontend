@@ -63,8 +63,8 @@ export class GroupFormComponent implements OnInit {
 		this.groupForm = this.fb.group({
 			name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
 			description: ['', [Validators.maxLength(2000)]],
-			vacationStartDate: [''],
-			vacationEndDate: [''],
+			vacationStartDate: ['', Validators.required], // OBBLIGATORIO per il calendario itinerario
+			vacationEndDate: ['', Validators.required],   // OBBLIGATORIO per il calendario itinerario
 			coverImageUrl: ['', [Validators.maxLength(500)]],
 			memberSearch: ['']
 		});

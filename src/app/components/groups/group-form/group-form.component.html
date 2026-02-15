@@ -67,13 +67,29 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="vacationStartDate">Data Inizio</label>
-            <input id="vacationStartDate" type="date" formControlName="vacationStartDate" />
+            <label for="vacationStartDate">Data Inizio <span class="required">*</span></label>
+            <input
+              id="vacationStartDate"
+              type="date"
+              formControlName="vacationStartDate"
+              required
+            />
+            @if (
+              groupForm.get('vacationStartDate')?.invalid &&
+              groupForm.get('vacationStartDate')?.touched
+            ) {
+              <div class="error-message">La data di inizio è obbligatoria</div>
+            }
           </div>
 
           <div class="form-group">
-            <label for="vacationEndDate">Data Fine</label>
-            <input id="vacationEndDate" type="date" formControlName="vacationEndDate" />
+            <label for="vacationEndDate">Data Fine <span class="required">*</span></label>
+            <input id="vacationEndDate" type="date" formControlName="vacationEndDate" required />
+            @if (
+              groupForm.get('vacationEndDate')?.invalid && groupForm.get('vacationEndDate')?.touched
+            ) {
+              <div class="error-message">La data di fine è obbligatoria</div>
+            }
           </div>
         </div>
 

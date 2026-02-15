@@ -147,6 +147,13 @@ export class GroupDetailComponent implements OnInit {
 		}
 	}
 
+	goToItinerary() {
+		const currentGroup = this.group();
+		if (currentGroup) {
+			this.router.navigate(['/groups', currentGroup.id, 'itinerary']);
+		}
+	}
+
 	deleteGroup() {
 		const currentGroup = this.group();
 		if (!currentGroup) return;
