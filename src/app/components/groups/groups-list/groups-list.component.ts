@@ -3,11 +3,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { GroupService } from '../../../services/group.service';
 import { Group } from '../../../models/group.model';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideCirclePlus, lucideCalendar, lucideUsers } from '@ng-icons/lucide';
 
 @Component({
 	selector: 'app-groups-list',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, NgIconComponent],
+	providers: [provideIcons({ lucideCirclePlus, lucideCalendar, lucideUsers })],
 	templateUrl: './groups-list.component.html',
 	styleUrls: ['./groups-list.component.scss']
 })

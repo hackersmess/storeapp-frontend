@@ -200,6 +200,72 @@
         </div>
       }
 
+      @if (isEditMode() && isAdmin()) {
+        <div class="form-section">
+          <h2>Membri del Gruppo</h2>
+          <p class="section-description">
+            Gestisci i membri del gruppo. Puoi aggiungere nuovi membri dalla pagina di dettaglio.
+          </p>
+
+          @if (selectedMembers.length > 0) {
+            <div class="selected-members">
+              <h3>Membri Attuali ({{ selectedMembers.length }})</h3>
+              <div class="members-list">
+                @for (member of selectedMembers; track member.user.id) {
+                  <div class="member-item">
+                    @if (member.user.avatarUrl) {
+                      <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+                    }
+                    @if (!member.user.avatarUrl) {
+                      <div class="avatar-placeholder">
+                        {{ member.user.name.charAt(0).toUpperCase() }}
+                      </div>
+                    }
+                    <div class="member-info">
+                      <div class="member-name">{{ member.user.name }}</div>
+                      <div class="member-email">{{ member.user.email }}</div>
+                      <div class="member-role" [class.admin]="member.role === GroupRole.ADMIN">
+                        {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+                      </div>
+                    </div>
+                    <div class="member-actions">
+                      @if (canModifyMember(member.user.id)) {
+                        <button
+                          type="button"
+                          class="role-toggle"
+                          (click)="toggleRole(member.user.id)"
+                          [class.admin]="member.role === GroupRole.ADMIN"
+                          title="{{
+                            member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'
+                          }}"
+                        >
+                          {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+                        </button>
+                      }
+                      @if (!canModifyMember(member.user.id)) {
+                        <span class="role-badge" [class.admin]="member.role === GroupRole.ADMIN">
+                          {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+                        </span>
+                      }
+                      @if (canRemoveMember(member.user.id)) {
+                        <button
+                          type="button"
+                          class="btn-remove"
+                          (click)="removeMember(member.user.id)"
+                          title="Rimuovi"
+                        >
+                          ×
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <div class="form-actions">
         <button type="button" class="btn-secondary" (click)="cancel()">Annulla</button>
         <button type="submit" class="btn-primary" [disabled]="loading()">

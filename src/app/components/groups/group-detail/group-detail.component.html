@@ -51,9 +51,10 @@
         <i class="icon-trash"></i>
         Elimina
       </button>
-      <button class="btn-secondary" (click)="leaveGroup()" *ngIf="!isAdmin()">
+      <!-- Questo bottone è SEMPRE visibile per tutti i membri -->
+      <button class="btn-secondary" (click)="leaveGroup()">
         <i class="icon-exit"></i>
-        Abbandona
+        Abbandona Gruppo
       </button>
     </div>
 
@@ -73,11 +74,17 @@
     <!-- Leave Group Confirmation Modal -->
     <app-confirm-dialog
       [show]="showLeaveGroupConfirm()"
-      title="Abbandona Gruppo"
-      message="Sei sicuro di voler abbandonare questo gruppo?"
-      confirmText="Abbandona"
-      cancelText="Annulla"
-      confirmButtonClass="btn-danger"
+      [title]="leaveConfirmTitle()"
+      [message]="leaveConfirmMessage()"
+      [confirmText]="
+        leaveStatus?.canLeave
+          ? leaveStatus?.willDeleteGroup
+            ? 'Abbandona ed Elimina'
+            : 'Abbandona'
+          : 'Chiudi'
+      "
+      [cancelText]="leaveStatus?.canLeave ? 'Annulla' : ''"
+      [confirmButtonClass]="leaveStatus?.canLeave ? 'btn-danger' : 'btn-primary'"
       [loading]="confirmLoading()"
       (confirm)="confirmLeaveGroup()"
       (cancel)="showLeaveGroupConfirm.set(false)"
@@ -315,9 +322,11 @@
             <div class="member-joined">Entrato il {{ formatDate(member.joinedAt) }}</div>
           </div>
 
-          <div class="member-actions" *ngIf="isAdmin()">
+          <!-- Azioni per Admin (non su se stesso) -->
+          <div class="member-actions" *ngIf="canModifyMember(member) || canRemoveMember(member)">
             <button
               class="btn-icon"
+              *ngIf="canModifyMember(member)"
               (click)="toggleMemberRole(member)"
               [title]="member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'"
             >
@@ -325,6 +334,7 @@
             </button>
             <button
               class="btn-icon btn-danger"
+              *ngIf="canRemoveMember(member)"
               (click)="removeMember(member)"
               title="Rimuovi dal gruppo"
             >

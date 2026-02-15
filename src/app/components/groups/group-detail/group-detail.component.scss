@@ -389,6 +389,7 @@
           .member-actions {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
 
             .btn-icon {
               width: 36px;
@@ -414,6 +415,27 @@
                 &:hover {
                   background: #fcc;
                 }
+              }
+            }
+
+            .btn-small {
+              padding: 0.5rem 1rem;
+              font-size: 0.875rem;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              border-radius: 6px;
+              border: 2px solid #e5e7eb;
+              cursor: pointer;
+              transition: all 0.2s;
+
+              i {
+                font-size: 0.875rem;
+              }
+
+              &:hover {
+                border-color: #667eea;
+                background: #f9fafb;
               }
             }
           }

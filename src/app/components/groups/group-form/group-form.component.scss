@@ -265,12 +265,40 @@
               font-size: 0.875rem;
               color: #6b7280;
             }
+
+            .member-role {
+              font-size: 0.75rem;
+              font-weight: 600;
+              color: #6b7280;
+              margin-top: 0.25rem;
+
+              &.admin {
+                color: #667eea;
+              }
+            }
           }
 
           .member-actions {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+
+            .role-badge {
+              padding: 0.5rem 1rem;
+              background: #f3f4f6;
+              border: 2px solid #e5e7eb;
+              border-radius: 6px;
+              font-weight: 600;
+              color: #6b7280;
+              font-size: 0.875rem;
+              cursor: default;
+
+              &.admin {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-color: #667eea;
+              }
+            }
 
             .role-toggle {
               padding: 0.5rem 1rem;

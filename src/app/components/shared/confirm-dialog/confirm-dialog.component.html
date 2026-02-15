@@ -10,7 +10,13 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="onCancel()" [disabled]="loading" type="button">
+      <button
+        *ngIf="cancelText"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="loading"
+        type="button"
+      >
         {{ cancelText }}
       </button>
       <button

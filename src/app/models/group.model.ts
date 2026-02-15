@@ -53,3 +53,13 @@ export interface AddMemberRequest {
 export interface UpdateMemberRoleRequest {
 	role: GroupRole;
 }
+
+export interface LeaveGroupStatus {
+	canLeave: boolean;
+	reason?: string;
+	willDeleteGroup: boolean;
+	isOnlyMember: boolean;
+	isLastAdmin: boolean;
+	memberCount: number;
+	adminCount: number;
+}

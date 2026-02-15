@@ -7,6 +7,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { GroupRole } from '../../../models/group.model';
 import { User, UserBasic } from '../../../models/user.model';
 import { GroupService } from '../../../services/group.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
 	selector: 'app-group-form',
@@ -20,6 +21,7 @@ export class GroupFormComponent implements OnInit {
 	private groupService = inject(GroupService);
 	private router = inject(Router);
 	private route = inject(ActivatedRoute);
+	private authService = inject(AuthService);
 
 	groupForm!: FormGroup;
 	groupId: number | null = null;
@@ -40,6 +42,9 @@ export class GroupFormComponent implements OnInit {
 	searchQuery$ = new Subject<string>();
 
 	GroupRole = GroupRole;
+
+	// Controlla se l'utente è admin del gruppo
+	private currentUserRole: GroupRole | null = null;
 
 	ngOnInit() {
 		this.initForm();
@@ -128,6 +133,13 @@ export class GroupFormComponent implements OnInit {
 						user: m.user,
 						role: m.role
 					}));
+
+					// Determina il ruolo dell'utente corrente
+					const currentUser = this.authService.getCurrentUser();
+					if (currentUser) {
+						const currentMember = group.members.find(m => m.user.id === currentUser.id);
+						this.currentUserRole = currentMember?.role || null;
+					}
 				}
 
 				this.loading.set(false);
@@ -218,5 +230,28 @@ export class GroupFormComponent implements OnInit {
 		setTimeout(() => {
 			this.showSearchResults.set(false);
 		}, 200);
+	}
+
+	isAdmin(): boolean {
+		return this.currentUserRole === GroupRole.ADMIN;
+	}
+
+	isCurrentUser(userId: number): boolean {
+		const currentUser = this.authService.getCurrentUser();
+		return currentUser?.id === userId;
+	}
+
+	canModifyMember(userId: number): boolean {
+		// Un utente non può modificare se stesso
+		if (this.isCurrentUser(userId)) return false;
+		// Solo gli admin possono modificare altri membri
+		return this.isAdmin();
+	}
+
+	canRemoveMember(userId: number): boolean {
+		// Un utente non può rimuovere se stesso
+		if (this.isCurrentUser(userId)) return false;
+		// Solo gli admin possono rimuovere altri membri
+		return this.isAdmin();
 	}
 }

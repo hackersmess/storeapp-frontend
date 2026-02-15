@@ -8,7 +8,8 @@ import {
 	CreateGroupRequest,
 	UpdateGroupRequest,
 	AddMemberRequest,
-	UpdateMemberRoleRequest
+	UpdateMemberRoleRequest,
+	LeaveGroupStatus
 } from '../models/group.model';
 import { User } from '../models/user.model';
 
@@ -92,6 +93,13 @@ export class GroupService {
 	 */
 	removeMember(groupId: number, memberId: number): Observable<void> {
 		return this.http.delete<void>(`${this.apiUrl}/${groupId}/members/${memberId}`);
+	}
+
+	/**
+	 * Verifica lo stato prima di abbandonare un gruppo
+	 */
+	checkLeaveGroupStatus(groupId: number): Observable<LeaveGroupStatus> {
+		return this.http.get<LeaveGroupStatus>(`${this.apiUrl}/${groupId}/leave/status`);
 	}
 
 	/**

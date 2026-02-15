@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideUsers, lucidePlusCircle } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, NgIconComponent],
+  providers: [provideIcons({ lucideUsers, lucidePlusCircle })],
   template: `
     <div class="home-container">
       <h1>Benvenuto su StoreApp</h1>
@@ -12,13 +15,17 @@ import { RouterLink } from '@angular/router';
       
       <div class="quick-actions">
         <a routerLink="/groups" class="action-card">
-          <div class="icon">👥</div>
+          <div class="icon">
+            <ng-icon name="lucideUsers" size="48"></ng-icon>
+          </div>
           <h2>I Miei Gruppi</h2>
           <p>Gestisci i tuoi gruppi di vacanza</p>
         </a>
         
         <a routerLink="/groups/create" class="action-card">
-          <div class="icon">➕</div>
+          <div class="icon">
+            <ng-icon name="lucidePlusCircle" size="48"></ng-icon>
+          </div>
           <h2>Crea Gruppo</h2>
           <p>Inizia a organizzare una nuova vacanza</p>
         </a>

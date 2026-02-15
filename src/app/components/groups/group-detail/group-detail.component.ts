@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GroupService } from '../../../services/group.service';
-import { Group, GroupMember, GroupRole, AddMemberRequest } from '../../../models/group.model';
+import { Group, GroupMember, GroupRole, AddMemberRequest, LeaveGroupStatus } from '../../../models/group.model';
 import { User } from '../../../models/user.model';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
 	selector: 'app-group-detail',
@@ -21,6 +22,7 @@ export class GroupDetailComponent implements OnInit {
 	private router = inject(Router);
 	private route = inject(ActivatedRoute);
 	private fb = inject(FormBuilder);
+	private authService = inject(AuthService);
 
 	// ✨ Signal invece di variabili normali
 	group = signal<Group | null>(null);
@@ -47,6 +49,11 @@ export class GroupDetailComponent implements OnInit {
 	showLeaveGroupConfirm = signal(false);
 	memberToRemove: GroupMember | null = null;
 	confirmLoading = signal(false);
+
+	// Leave group status
+	leaveStatus: LeaveGroupStatus | null = null;
+	leaveConfirmMessage = signal<string>('');
+	leaveConfirmTitle = signal<string>('');
 
 	GroupRole = GroupRole;
 
@@ -141,12 +148,50 @@ export class GroupDetailComponent implements OnInit {
 	}
 
 	leaveGroup() {
-		this.showLeaveGroupConfirm.set(true);
+		const currentGroup = this.group();
+		if (!currentGroup) return;
+
+		// Prima verifica lo stato
+		this.loading.set(true);
+		this.groupService.checkLeaveGroupStatus(currentGroup.id).subscribe({
+			next: (status) => {
+				this.loading.set(false);
+				this.leaveStatus = status;
+
+				if (!status.canLeave) {
+					// Non può abbandonare (ultimo admin)
+					this.leaveConfirmTitle.set('Impossibile abbandonare il gruppo');
+					this.leaveConfirmMessage.set(status.reason || 'Non puoi abbandonare il gruppo');
+					this.showLeaveGroupConfirm.set(true);
+				} else if (status.willDeleteGroup) {
+					// Unico membro - il gruppo verrà eliminato
+					this.leaveConfirmTitle.set('Abbandona ed Elimina Gruppo');
+					this.leaveConfirmMessage.set(status.reason || 'Essendo l\'unico membro, uscendo verrà cancellato il gruppo');
+					this.showLeaveGroupConfirm.set(true);
+				} else {
+					// Può abbandonare normalmente
+					this.leaveConfirmTitle.set('Abbandona Gruppo');
+					this.leaveConfirmMessage.set('Sei sicuro di voler abbandonare questo gruppo?');
+					this.showLeaveGroupConfirm.set(true);
+				}
+			},
+			error: (err) => {
+				console.error('Error checking leave status:', err);
+				this.loading.set(false);
+				this.error.set('Errore nella verifica dello stato');
+			}
+		});
 	}
 
 	confirmLeaveGroup() {
 		const currentGroup = this.group();
 		if (!currentGroup) return;
+
+		// Se non può abbandonare (ultimo admin), chiudi solo la modale
+		if (this.leaveStatus && !this.leaveStatus.canLeave) {
+			this.showLeaveGroupConfirm.set(false);
+			return;
+		}
 
 		this.confirmLoading.set(true);
 		this.groupService.leaveGroup(currentGroup.id).subscribe({
@@ -217,8 +262,38 @@ export class GroupDetailComponent implements OnInit {
 	}
 
 	isAdmin(): boolean {
-		// TODO: Check if current user is admin
-		return true;
+		const currentGroup = this.group();
+		const currentUser = this.authService.getCurrentUser();
+
+		if (!currentGroup || !currentUser) {
+			console.log('isAdmin: Missing group or user', { currentGroup, currentUser });
+			return false;
+		}
+
+		// Verifica se l'utente corrente è admin del gruppo
+		const currentMember = currentGroup.members?.find(m => m.user.id === currentUser.id);
+		const isAdmin = currentMember?.role === GroupRole.ADMIN;
+		console.log('isAdmin:', { userId: currentUser.id, currentMember, isAdmin });
+		return isAdmin;
+	}
+
+	isCurrentUser(userId: number): boolean {
+		const currentUser = this.authService.getCurrentUser();
+		return currentUser?.id === userId;
+	}
+
+	canModifyMember(member: GroupMember): boolean {
+		// Un utente non può modificare se stesso
+		if (this.isCurrentUser(member.user.id)) return false;
+		// Solo gli admin possono modificare altri membri
+		return this.isAdmin();
+	}
+
+	canRemoveMember(member: GroupMember): boolean {
+		// Un utente non può rimuovere se stesso (deve usare "Abbandona gruppo")
+		if (this.isCurrentUser(member.user.id)) return false;
+		// Solo gli admin possono rimuovere altri membri
+		return this.isAdmin();
 	}
 
 	openAddMemberModal() {
