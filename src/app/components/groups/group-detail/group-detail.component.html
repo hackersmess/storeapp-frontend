@@ -20,7 +20,7 @@
           <h1>{{ group()!.name }}</h1>
           <div class="group-meta">
             <div class="meta-item">
-              <i class="icon-calendar"></i>
+              <ng-icon name="lucideCalendar"></ng-icon>
               <span *ngIf="group()!.vacationStartDate && group()!.vacationEndDate">
                 {{ formatDate(group()!.vacationStartDate) }} -
                 {{ formatDate(group()!.vacationEndDate) }}
@@ -30,7 +30,7 @@
               </span>
             </div>
             <div class="meta-item">
-              <i class="icon-users"></i>
+              <ng-icon name="lucideUsers"></ng-icon>
               <span
                 >{{ group()!.memberCount }}
                 {{ group()!.memberCount === 1 ? 'membro' : 'membri' }}</span
@@ -44,16 +44,16 @@
     <!-- Actions Bar -->
     <div class="actions-bar">
       <button class="btn-secondary" (click)="editGroup()" *ngIf="isAdmin()">
-        <i class="icon-edit"></i>
+        <ng-icon name="lucideEdit"></ng-icon>
         Modifica
       </button>
       <button class="btn-danger" (click)="showDeleteConfirm.set(true)" *ngIf="isAdmin()">
-        <i class="icon-trash"></i>
+        <ng-icon name="lucideTrash2"></ng-icon>
         Elimina
       </button>
       <!-- Questo bottone è SEMPRE visibile per tutti i membri -->
       <button class="btn-secondary" (click)="leaveGroup()">
-        <i class="icon-exit"></i>
+        <ng-icon name="lucideLogOut"></ng-icon>
         Abbandona Gruppo
       </button>
     </div>
@@ -297,7 +297,7 @@
       <div class="section-header">
         <h2>Membri ({{ group()!.members?.length || 0 }})</h2>
         <button class="btn-primary" *ngIf="isAdmin()" (click)="openAddMemberModal()">
-          <i class="icon-plus"></i>
+          <ng-icon name="lucidePlus"></ng-icon>
           Aggiungi Membro
         </button>
       </div>
@@ -330,7 +330,7 @@
               (click)="toggleMemberRole(member)"
               [title]="member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'"
             >
-              <i class="icon-shield"></i>
+              <ng-icon name="lucideShield"></ng-icon>
             </button>
             <button
               class="btn-icon btn-danger"
@@ -338,7 +338,7 @@
               (click)="removeMember(member)"
               title="Rimuovi dal gruppo"
             >
-              <i class="icon-trash"></i>
+              <ng-icon name="lucideTrash2"></ng-icon>
             </button>
           </div>
         </div>

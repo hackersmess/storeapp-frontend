@@ -9,13 +9,32 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '../../../services/auth.service';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+	lucideCalendar,
+	lucideUsers,
+	lucideEdit,
+	lucideTrash2,
+	lucideLogOut,
+	lucidePlus,
+	lucideShield
+} from '@ng-icons/lucide';
 
 @Component({
 	selector: 'app-group-detail',
 	standalone: true,
-	imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmDialogComponent],
+	imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmDialogComponent, NgIconComponent],
 	templateUrl: './group-detail.component.html',
-	styleUrls: ['./group-detail.component.scss']
+	styleUrls: ['./group-detail.component.scss'],
+	viewProviders: [provideIcons({
+		lucideCalendar,
+		lucideUsers,
+		lucideEdit,
+		lucideTrash2,
+		lucideLogOut,
+		lucidePlus,
+		lucideShield
+	})]
 })
 export class GroupDetailComponent implements OnInit {
 	private groupService = inject(GroupService);

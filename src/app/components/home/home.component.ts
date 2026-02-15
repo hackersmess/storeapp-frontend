@@ -36,65 +36,68 @@ import { lucideUsers, lucidePlusCircle } from '@ng-icons/lucide';
     .home-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 3rem 2rem;
       text-align: center;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--color-text-primary);
       margin-bottom: 1rem;
+      letter-spacing: -0.03em;
     }
 
     p {
       font-size: 1.25rem;
-      color: #6b7280;
-      margin-bottom: 3rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 4rem;
     }
 
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 2rem;
       max-width: 800px;
       margin: 0 auto;
     }
 
     .action-card {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
       text-decoration: none;
       color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all var(--transition-base);
       cursor: pointer;
 
       &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-6px);
+        border-color: var(--color-border-light);
+        box-shadow: var(--shadow-xl);
       }
 
       .icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--color-text-primary);
+        ng-icon {
+          opacity: 0.9;
+        }
       }
 
       h2 {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 0.5rem;
+        color: var(--color-text-primary);
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.01em;
       }
 
       p {
         font-size: 1rem;
-        color: #6b7280;
-        margin: 0;
+        color: var(--color-text-secondary);
+        margin-bottom: 0;
       }
     }
   `]
