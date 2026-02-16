@@ -1,0 +1,40 @@
+<div class="calendar-container">
+  <div class="calendar-days">
+    @for (day of calendarDays(); track day.date.getTime()) {
+      <div
+        class="calendar-day"
+        [class.today]="day.isToday"
+        [class.selected]="day.isSelected"
+        (click)="onDayClick(day)"
+      >
+        <div class="day-header">
+          <div class="day-info">
+            <span class="day-name">{{ day.dayName }}</span>
+            <span class="day-number">{{ day.dayNumber }}</span>
+          </div>
+          <button
+            class="add-activity-btn"
+            (click)="onCreateActivity(day, $event)"
+            type="button"
+            title="Aggiungi attività"
+          >
+            <ng-icon name="lucidePlus" size="16"></ng-icon>
+          </button>
+        </div>
+
+        <div class="day-activities">
+          @if (day.activities.length === 0) {
+            <div class="no-activities">Nessuna attività</div>
+          } @else {
+            @for (activity of day.activities; track activity.id) {
+              <div class="activity-item" (click)="onActivityClick(activity, $event)">
+                <span class="activity-time">{{ formatTime(activity.start) }}</span>
+                <span class="activity-title">{{ activity.title }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

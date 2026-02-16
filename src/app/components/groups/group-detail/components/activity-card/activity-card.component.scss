@@ -1,0 +1,104 @@
+.activity-card {
+  background: var(--surface-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &.completed {
+    border-left-color: var(--success-color);
+    opacity: 0.8;
+
+    .activity-title {
+      text-decoration: line-through;
+    }
+  }
+
+  &.confirmed {
+    border-left-color: var(--success-color);
+  }
+
+  &.pending {
+    border-left-color: var(--warning-color);
+  }
+
+  &.declined {
+    border-left-color: var(--error-color);
+  }
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .activity-status {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+  }
+
+  .activity-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+  }
+}
+
+.activity-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 24px;
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    ng-icon {
+      flex-shrink: 0;
+    }
+  }
+}
+
+.activity-compact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 24px;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  .time {
+    font-weight: 500;
+  }
+
+  .participants {
+    color: var(--primary-color);
+  }
+}
+
+.compact {
+  padding: 8px;
+
+  .activity-header {
+    margin-bottom: 4px;
+
+    .activity-title {
+      font-size: 13px;
+    }
+  }
+}

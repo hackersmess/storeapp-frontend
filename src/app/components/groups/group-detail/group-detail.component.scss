@@ -93,6 +93,23 @@
               i {
                 font-size: 1.25rem;
               }
+
+              &.clickable {
+                cursor: pointer;
+                padding: 0.5rem 1rem;
+                margin: -0.5rem -1rem;
+                border-radius: var(--radius-md);
+                transition: all var(--transition-base);
+
+                &:hover {
+                  background: rgba(255, 255, 255, 0.15);
+                  transform: translateY(-2px);
+                }
+
+                &:active {
+                  transform: translateY(0);
+                }
+              }
             }
           }
         }
@@ -220,14 +237,48 @@
         background: var(--color-bg-secondary);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
-        padding: 2rem;
         box-shadow: var(--shadow-md);
+        overflow: hidden;
 
-        h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 1.5rem;
-          color: var(--color-text-primary);
+        .collapsible-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 2rem;
+          cursor: pointer;
+          user-select: none;
+          transition: background-color var(--transition-base);
+
+          &:hover {
+            background: var(--color-bg-hover);
+          }
+
+          h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--color-text-primary);
+          }
+
+          .collapse-icon {
+            font-size: 1.5rem;
+            color: var(--color-text-secondary);
+            transition: transform var(--transition-base);
+          }
+        }
+
+        .collapsible-content {
+          max-height: 1000px;
+          overflow: hidden;
+          transition:
+            max-height 0.3s ease-in-out,
+            padding 0.3s ease-in-out;
+          padding: 0 2rem 2rem 2rem;
+
+          &.collapsed {
+            max-height: 0;
+            padding: 0 2rem;
+          }
         }
 
         .info-item {
@@ -292,7 +343,83 @@
     .members-section {
       max-width: 1200px;
       margin: 2rem auto;
-      padding: 0 2rem 2rem;
+      padding: 0 2rem;
+
+      .members-card {
+        background: var(--color-bg-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+      }
+
+      .collapsible-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color var(--transition-base);
+
+        &:hover {
+          background: var(--color-bg-hover);
+        }
+
+        .section-header-left {
+          h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--color-text-primary);
+          }
+        }
+
+        .section-header-right {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+
+          .btn-add-member {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--color-accent);
+            color: var(--color-bg-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: var(--shadow-lg);
+            }
+          }
+
+          .collapse-icon {
+            font-size: 1.5rem;
+            color: var(--color-text-secondary);
+            transition: transform var(--transition-base);
+          }
+        }
+      }
+
+      .collapsible-content {
+        max-height: 2000px;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease-in-out,
+          padding 0.3s ease-in-out;
+        padding: 0 2rem 2rem 2rem;
+
+        &.collapsed {
+          max-height: 0;
+          padding: 0 2rem;
+        }
+      }
 
       .section-header {
         display: flex;
@@ -870,6 +997,346 @@
           background: var(--color-bg-elevated);
           color: var(--color-text-primary);
           font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// ==================== MOBILE TABS ====================
+.tabs-container {
+  display: flex;
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    &.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      background: var(--surface-hover);
+    }
+  }
+}
+
+.tab-content {
+  padding: 16px;
+  min-height: 400px;
+}
+
+// ==================== CALENDAR SECTION ====================
+.calendar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .activities-section {
+    margin-top: 16px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+
+    ng-icon {
+      opacity: 0.3;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+    }
+  }
+}
+
+.activities-full-section {
+  min-height: 400px;
+}
+
+// ==================== MEMBERS SECTION (TAB) ====================
+.members-section {
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+      }
+
+      span {
+        @media (max-width: 480px) {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .member-card {
+    background: var(--surface-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+
+      .member-avatar {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .avatar-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--primary-color);
+          color: white;
+          font-size: 20px;
+          font-weight: 600;
+        }
+      }
+
+      .member-details {
+        flex: 1;
+        min-width: 0;
+
+        .member-name {
+          margin: 0 0 4px 0;
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .member-email {
+          margin: 0;
+          font-size: 13px;
+          color: var(--text-secondary);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .role-badge {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+
+        &.admin {
+          background: rgba(var(--primary-rgb), 0.1);
+          color: var(--primary-color);
+        }
+
+        &.member {
+          background: var(--surface-hover);
+          color: var(--text-secondary);
+        }
+      }
+    }
+
+    .member-actions {
+      display: flex;
+      gap: 8px;
+
+      .action-btn {
+        padding: 8px;
+        background: var(--surface-hover);
+        border: none;
+        border-radius: 6px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: var(--border-color);
+        }
+
+        &.danger {
+          &:hover {
+            background: rgba(var(--error-rgb), 0.1);
+            color: var(--error-color);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== GROUP ACTIONS ====================
+.group-actions {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--surface-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .action-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--surface-hover);
+    }
+
+    &.danger {
+      color: var(--error-color);
+
+      &:hover {
+        background: rgba(var(--error-rgb), 0.1);
+      }
+    }
+  }
+}
+
+// ==================== RESPONSIVE ====================
+@media (min-width: 768px) {
+  .tab-content {
+    padding: 24px;
+  }
+
+  .calendar-section {
+    flex-direction: row;
+    gap: 24px;
+
+    app-group-calendar {
+      flex: 1;
+    }
+
+    .activities-section {
+      flex: 1;
+      margin-top: 0;
+    }
+  }
+
+  .members-section {
+    .member-card {
+      padding: 20px;
+
+      .member-info {
+        .member-avatar {
+          width: 56px;
+          height: 56px;
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  .members-section {
+    .member-card {
+      padding: 20px;
+
+      .member-info {
+        .member-avatar {
+          width: 56px;
+          height: 56px;
         }
       }
     }

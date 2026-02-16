@@ -1,0 +1,129 @@
+@if (show()) {
+  <div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">
+          {{ isEditMode() ? 'Modifica Attività' : 'Nuova Attività' }}
+        </h2>
+        <button class="close-btn" (click)="onClose()" type="button">
+          <ng-icon name="lucideX" size="20"></ng-icon>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="activityForm" (ngSubmit)="onSubmit()" class="modal-body">
+        <!-- Nome attività -->
+        <div class="form-group">
+          <label class="form-label required">
+            <ng-icon name="lucideAlignLeft" size="16"></ng-icon>
+            <span>Nome attività</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            formControlName="name"
+            placeholder="Es: Visita al Colosseo"
+            maxlength="200"
+            [class.error]="titleControl?.invalid && titleControl?.touched"
+          />
+          @if (titleControl?.invalid && titleControl?.touched) {
+            <span class="error-message">Il nome è obbligatorio</span>
+          }
+        </div>
+
+        <!-- Descrizione -->
+        <div class="form-group">
+          <label class="form-label">
+            <ng-icon name="lucideAlignLeft" size="16"></ng-icon>
+            <span>Descrizione</span>
+          </label>
+          <textarea
+            class="form-textarea"
+            formControlName="description"
+            placeholder="Aggiungi dettagli..."
+            rows="3"
+          ></textarea>
+        </div>
+
+        <!-- Data -->
+        <div class="form-group">
+          <label class="form-label">
+            <ng-icon name="lucideCalendar" size="16"></ng-icon>
+            <span>Data</span>
+          </label>
+          <input type="date" class="form-input" formControlName="scheduledDate" readonly />
+        </div>
+
+        <!-- Orari -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <ng-icon name="lucideClock" size="16"></ng-icon>
+              <span>Ora inizio</span>
+            </label>
+            <input type="time" class="form-input" formControlName="startTime" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ng-icon name="lucideClock" size="16"></ng-icon>
+              <span>Ora fine</span>
+            </label>
+            <input type="time" class="form-input" formControlName="endTime" />
+          </div>
+        </div>
+
+        <!-- Luogo -->
+        <div class="form-group">
+          <label class="form-label">
+            <ng-icon name="lucideMapPin" size="16"></ng-icon>
+            <span>Luogo</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            formControlName="locationName"
+            placeholder="Es: Colosseo"
+            maxlength="200"
+          />
+        </div>
+
+        <!-- Indirizzo -->
+        <div class="form-group">
+          <label class="form-label">
+            <ng-icon name="lucideMapPin" size="16"></ng-icon>
+            <span>Indirizzo</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            formControlName="locationAddress"
+            placeholder="Es: Piazza del Colosseo, Roma"
+            maxlength="500"
+          />
+        </div>
+
+        <!-- Footer con bottoni -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onClose()"
+            [disabled]="loading()"
+          >
+            Annulla
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="loading() || activityForm.invalid"
+          >
+            <ng-icon name="lucideSave" size="16"></ng-icon>
+            <span>{{ loading() ? 'Salvataggio...' : 'Salva' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

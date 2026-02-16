@@ -1,64 +1,340 @@
 <div class="group-detail-container">
-  <div *ngIf="loading()" class="loading">
-    <div class="spinner"></div>
-    <p>Caricamento...</p>
-  </div>
+  @if (loading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Caricamento...</p>
+    </div>
+  }
 
-  <div *ngIf="error()" class="error-message">
-    {{ error() }}
-    <button (click)="loadGroup(group()?.id || 0)" *ngIf="group()">Riprova</button>
-  </div>
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+      @if (group()) {
+        <button (click)="loadGroup(group()!.id)">Riprova</button>
+      }
+    </div>
+  }
 
-  <div *ngIf="group() && !loading()" class="group-content">
-    <!-- Cover Image -->
-    <div
-      class="group-cover"
-      [style.background-image]="group()!.coverImageUrl ? 'url(' + group()!.coverImageUrl + ')' : ''"
-    >
-      <div class="cover-overlay">
-        <div class="cover-content">
-          <h1>{{ group()!.name }}</h1>
-          <div class="group-meta">
-            <div class="meta-item">
-              <ng-icon name="lucideCalendar"></ng-icon>
-              <span *ngIf="group()!.vacationStartDate && group()!.vacationEndDate">
-                {{ formatDate(group()!.vacationStartDate) }} -
-                {{ formatDate(group()!.vacationEndDate) }}
-              </span>
-              <span *ngIf="!group()!.vacationStartDate || !group()!.vacationEndDate">
-                Date non specificate
-              </span>
-            </div>
-            <div class="meta-item">
-              <ng-icon name="lucideUsers"></ng-icon>
-              <span
-                >{{ group()!.memberCount }}
-                {{ group()!.memberCount === 1 ? 'membro' : 'membri' }}</span
-              >
+  @if (group() && !loading()) {
+    <div class="group-content">
+      <!-- Cover Image -->
+      <div
+        class="group-cover"
+        [style.background-image]="
+          group()!.coverImageUrl ? 'url(' + group()!.coverImageUrl + ')' : ''
+        "
+      >
+        <div class="cover-overlay">
+          <div class="cover-content">
+            <h1>{{ group()!.name }}</h1>
+            <div class="group-meta">
+              <div class="meta-item">
+                <ng-icon name="lucideCalendar"></ng-icon>
+                @if (group()!.vacationStartDate && group()!.vacationEndDate) {
+                  <span>
+                    {{ formatDate(group()!.vacationStartDate) }} -
+                    {{ formatDate(group()!.vacationEndDate) }}
+                  </span>
+                } @else {
+                  <span>Date non specificate</span>
+                }
+              </div>
+              <div class="meta-item clickable" (click)="setActiveTab('members')">
+                <ng-icon name="lucideUsers"></ng-icon>
+                <span
+                  >{{ group()!.memberCount }}
+                  {{ group()!.memberCount === 1 ? 'membro' : 'membri' }}</span
+                >
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Mobile Tabs -->
+      <div class="tabs-container">
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'calendar'"
+          (click)="setActiveTab('calendar')"
+          type="button"
+        >
+          <ng-icon name="lucideCalendar" size="18"></ng-icon>
+          <span>Calendario</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'activities'"
+          (click)="setActiveTab('activities')"
+          type="button"
+        >
+          <ng-icon name="lucideList" size="18"></ng-icon>
+          <span>Attività</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'map'"
+          (click)="setActiveTab('map')"
+          type="button"
+        >
+          <ng-icon name="lucideMap" size="18"></ng-icon>
+          <span>Mappa</span>
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Calendar Tab -->
+        @if (activeTab() === 'calendar') {
+          <div class="calendar-section">
+            @if (group()!.vacationStartDate && group()!.vacationEndDate) {
+              <app-group-calendar
+                [vacationStartDate]="group()!.vacationStartDate"
+                [vacationEndDate]="group()!.vacationEndDate"
+                [activities]="activities()"
+                [selectedDate]="selectedDate()"
+                (dateSelected)="onDateSelected($event)"
+                (activityClick)="onActivityClick($event)"
+                (createActivity)="onAddActivity($event)"
+              >
+              </app-group-calendar>
+            } @else {
+              <div class="empty-state">
+                <ng-icon name="lucideCalendar" size="48"></ng-icon>
+                <p>Configura le date del gruppo per visualizzare il calendario</p>
+                @if (isAdmin()) {
+                  <button class="btn-primary" (click)="editGroup()">Configura Date</button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Activities List Tab -->
+        @if (activeTab() === 'activities') {
+          <div class="activities-full-section">
+            <app-group-activities-list
+              [activities]="activities()"
+              [selectedDate]="null"
+              [loading]="loadingActivities()"
+              (activityClick)="onActivityClick($event)"
+              (addActivity)="onAddActivity($event)"
+            >
+            </app-group-activities-list>
+          </div>
+        }
+
+        <!-- Map Tab -->
+        @if (activeTab() === 'map') {
+          <div class="map-section">
+            <div class="empty-state">
+              <ng-icon name="lucideMap" size="48"></ng-icon>
+              <p>Funzionalità mappa in arrivo</p>
+              <p class="text-muted">
+                Qui potrai visualizzare la mappa con tutte le tappe del viaggio
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- Members Tab -->
+        @if (activeTab() === 'members') {
+          <div class="members-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <ng-icon name="lucideUsers"></ng-icon>
+                Membri del gruppo
+              </h2>
+              @if (isAdmin()) {
+                <button class="btn-primary" (click)="openAddMemberModal()">
+                  <ng-icon name="lucidePlus"></ng-icon>
+                  <span>Aggiungi</span>
+                </button>
+              }
+            </div>
+
+            <div class="members-list">
+              @for (member of group()!.members; track member.id) {
+                <div class="member-card">
+                  <div class="member-info">
+                    <div class="member-avatar">
+                      @if (member.user.avatarUrl) {
+                        <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+                      } @else {
+                        <div class="avatar-placeholder">
+                          {{ member.user.name.charAt(0).toUpperCase() }}
+                        </div>
+                      }
+                    </div>
+                    <div class="member-details">
+                      <h4 class="member-name">{{ member.user.name }}</h4>
+                      <p class="member-email">{{ member.user.email }}</p>
+                    </div>
+                    @if (member.role === GroupRole.ADMIN) {
+                      <span class="role-badge admin">
+                        <ng-icon name="lucideShield" size="14"></ng-icon>
+                        Admin
+                      </span>
+                    } @else {
+                      <span class="role-badge member">Membro</span>
+                    }
+                  </div>
+
+                  @if (isAdmin() && canModifyMember(member)) {
+                    <div class="member-actions">
+                      <button
+                        class="action-btn"
+                        (click)="toggleMemberRole(member)"
+                        title="Cambia ruolo"
+                      >
+                        <ng-icon name="lucideShield"></ng-icon>
+                      </button>
+                      <button
+                        class="action-btn danger"
+                        (click)="removeMember(member)"
+                        title="Rimuovi"
+                      >
+                        <ng-icon name="lucideTrash2"></ng-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Group Actions (sempre visibili in fondo) -->
+      <div class="group-actions">
+        @if (isAdmin()) {
+          <button class="action-link" (click)="editGroup()">
+            <ng-icon name="lucideEdit"></ng-icon>
+            Modifica gruppo
+          </button>
+          <button class="action-link danger" (click)="showDeleteConfirm.set(true)">
+            <ng-icon name="lucideTrash2"></ng-icon>
+            Elimina gruppo
+          </button>
+        }
+        <button class="action-link" (click)="leaveGroup()">
+          <ng-icon name="lucideLogOut"></ng-icon>
+          Abbandona gruppo
+        </button>
+      </div>
     </div>
 
-    <!-- Actions Bar -->
-    <div class="actions-bar">
-      <button class="btn-secondary" (click)="editGroup()" *ngIf="isAdmin()">
-        <ng-icon name="lucideEdit"></ng-icon>
-        Modifica
-      </button>
-      <button class="btn-danger" (click)="showDeleteConfirm.set(true)" *ngIf="isAdmin()">
-        <ng-icon name="lucideTrash2"></ng-icon>
-        Elimina
-      </button>
-      <!-- Questo bottone è SEMPRE visibile per tutti i membri -->
-      <button class="btn-secondary" (click)="leaveGroup()">
-        <ng-icon name="lucideLogOut"></ng-icon>
-        Abbandona Gruppo
-      </button>
-    </div>
+    <!-- Activity Modal -->
+    <app-activity-modal
+      [show]="showActivityModal()"
+      [activity]="activityToEdit()"
+      [prefilledDate]="selectedDate()"
+      [loading]="savingActivity()"
+      (close)="closeActivityModal()"
+      (save)="onSaveActivity($event)"
+    >
+    </app-activity-modal>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Add Member Modal -->
+    @if (showAddMemberModal()) {
+      <div class="modal-overlay" (click)="closeAddMemberModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Aggiungi Membro</h2>
+            <button class="close-btn" (click)="closeAddMemberModal()">×</button>
+          </div>
+
+          <div class="modal-body">
+            @if (!selectedUserToAdd) {
+              <div class="search-section">
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="Cerca per email o nome..."
+                  [(ngModel)]="searchQuery"
+                  (input)="onSearchChange(searchQuery)"
+                  (blur)="hideSearchResults()"
+                />
+
+                @if (searching) {
+                  <div class="search-results">
+                    <div class="search-loading">Ricerca in corso...</div>
+                  </div>
+                }
+
+                @if (showSearchResults && searchResults.length > 0) {
+                  <div class="search-results">
+                    @for (user of searchResults; track user.id) {
+                      <div class="search-result-item" (mousedown)="selectUserToAdd(user)">
+                        <div class="user-info">
+                          <strong>{{ user.name }}</strong>
+                          <span class="user-email">{{ user.email }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (
+                  showSearchResults &&
+                  searchResults.length === 0 &&
+                  !searching &&
+                  searchQuery.length >= 2
+                ) {
+                  <div class="search-results">
+                    <div class="no-results">Nessun utente trovato</div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="selected-user-section">
+                <div class="selected-user">
+                  <div class="user-info">
+                    <strong>{{ selectedUserToAdd.name }}</strong>
+                    <span class="user-email">{{ selectedUserToAdd.email }}</span>
+                  </div>
+                  <button class="clear-btn" (click)="clearSelectedUser()">×</button>
+                </div>
+
+                <div class="role-selection">
+                  <label>Ruolo:</label>
+                  <div class="role-dropdown">
+                    <button class="role-btn" (click)="toggleRoleDropdown()">
+                      {{ selectedRole === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+                      <ng-icon name="lucideChevronDown"></ng-icon>
+                    </button>
+                    @if (roleDropdownOpen) {
+                      <div class="role-options">
+                        <div class="role-option" (click)="selectRole(GroupRole.MEMBER)">Membro</div>
+                        <div class="role-option" (click)="selectRole(GroupRole.ADMIN)">
+                          <ng-icon name="lucideShield"></ng-icon>
+                          Admin
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
+              Annulla
+            </button>
+            <button
+              class="btn-primary"
+              (click)="confirmAddMember()"
+              [disabled]="!selectedUserToAdd || addingMember"
+            >
+              {{ addingMember ? 'Aggiunta in corso...' : 'Aggiungi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Confirmation Dialogs -->
     <app-confirm-dialog
       [show]="showDeleteConfirm()"
       title="Conferma Eliminazione"
@@ -69,9 +345,9 @@
       [loading]="confirmLoading()"
       (confirm)="deleteGroup()"
       (cancel)="showDeleteConfirm.set(false)"
-    ></app-confirm-dialog>
+    >
+    </app-confirm-dialog>
 
-    <!-- Leave Group Confirmation Modal -->
     <app-confirm-dialog
       [show]="showLeaveGroupConfirm()"
       [title]="leaveConfirmTitle()"
@@ -88,9 +364,9 @@
       [loading]="confirmLoading()"
       (confirm)="confirmLeaveGroup()"
       (cancel)="showLeaveGroupConfirm.set(false)"
-    ></app-confirm-dialog>
+    >
+    </app-confirm-dialog>
 
-    <!-- Remove Member Confirmation Modal -->
     <app-confirm-dialog
       [show]="showRemoveMemberConfirm()"
       [title]="'Rimuovi ' + (memberToRemove?.user.name || 'membro')"
@@ -104,249 +380,8 @@
       confirmButtonClass="btn-danger"
       [loading]="confirmLoading()"
       (confirm)="confirmRemoveMember()"
-      (cancel)="showRemoveMemberConfirm.set(false); memberToRemove = null"
-    ></app-confirm-dialog>
-
-    <!--Add Member Modal -->
-    <div class="modal" *ngIf="showAddMemberModal()">
-      <div class="modal-content add-member-modal">
-        <div class="modal-header">
-          <h2>Aggiungi Membro</h2>
-          <button class="btn-close" (click)="closeAddMemberModal()" [disabled]="addingMember">
-            ×
-          </button>
-        </div>
-
-        <!-- Search Input with Inline Results (same style as group-form) -->
-        <div class="search-container">
-          <div class="form-group">
-            <label for="search">Cerca utente</label>
-            <div class="search-input-wrapper">
-              <input
-                type="text"
-                id="search"
-                [(ngModel)]="searchQuery"
-                (ngModelChange)="onSearchChange($event)"
-                placeholder="Cerca per nome o email..."
-                autocomplete="off"
-                (focus)="showSearchResults = true"
-                (blur)="hideSearchResults()"
-              />
-              <div *ngIf="searching" class="search-spinner">
-                <div class="spinner-small"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Search Results Dropdown -->
-          <div *ngIf="showSearchResults && searchResults.length > 0" class="search-results">
-            <div
-              *ngFor="let user of searchResults"
-              class="search-result-item"
-              (click)="selectUserToAdd(user)"
-            >
-              <img
-                *ngIf="user.avatarUrl"
-                [src]="user.avatarUrl"
-                [alt]="user.name"
-                class="user-avatar"
-              />
-              <div *ngIf="!user.avatarUrl" class="avatar-placeholder">
-                {{ user.name.charAt(0).toUpperCase() }}
-              </div>
-              <div class="user-info">
-                <div class="user-name">{{ user.name }}</div>
-                <div class="user-email">{{ user.email }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- No Results -->
-          <div
-            *ngIf="
-              showSearchResults &&
-              searchResults.length === 0 &&
-              searchQuery &&
-              searchQuery.length >= 2 &&
-              !searching
-            "
-            class="search-no-results"
-          >
-            <p>Nessun utente disponibile trovato</p>
-          </div>
-        </div>
-
-        <!-- Selected User Preview (before adding) -->
-        <div *ngIf="selectedUserToAdd" class="selected-user-preview">
-          <h3>Utente selezionato:</h3>
-          <div class="user-preview-card">
-            <img
-              *ngIf="selectedUserToAdd.avatarUrl"
-              [src]="selectedUserToAdd.avatarUrl"
-              [alt]="selectedUserToAdd.name"
-            />
-            <div *ngIf="!selectedUserToAdd.avatarUrl" class="avatar-placeholder">
-              {{ selectedUserToAdd.name.charAt(0).toUpperCase() }}
-            </div>
-            <div class="user-info">
-              <div class="user-name">{{ selectedUserToAdd.name }}</div>
-              <div class="user-email">{{ selectedUserToAdd.email }}</div>
-            </div>
-            <button class="btn-remove-selection" (click)="clearSelectedUser()">×</button>
-          </div>
-
-          <!-- Role Selection -->
-          <div class="form-group">
-            <label>Ruolo</label>
-            <div
-              class="custom-select"
-              [class.open]="roleDropdownOpen"
-              (click)="toggleRoleDropdown()"
-            >
-              <div class="select-trigger">
-                <span>{{ selectedRole === GroupRole.ADMIN ? 'Admin' : 'Membro' }}</span>
-                <span class="arrow">▼</span>
-              </div>
-              <div
-                class="select-options"
-                *ngIf="roleDropdownOpen"
-                (click)="$event.stopPropagation()"
-              >
-                <div
-                  class="select-option"
-                  [class.selected]="selectedRole === GroupRole.MEMBER"
-                  (click)="selectRole(GroupRole.MEMBER)"
-                >
-                  Membro
-                </div>
-                <div
-                  class="select-option"
-                  [class.selected]="selectedRole === GroupRole.ADMIN"
-                  (click)="selectRole(GroupRole.ADMIN)"
-                >
-                  Admin
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add Button -->
-          <div class="modal-actions">
-            <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
-              Annulla
-            </button>
-            <button class="btn-primary" (click)="confirmAddMember()" [disabled]="addingMember">
-              <span *ngIf="!addingMember">Aggiungi</span>
-              <span *ngIf="addingMember">
-                <div class="spinner-small"></div>
-                Aggiunta in corso...
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Close Button (when no user selected) -->
-        <div *ngIf="!selectedUserToAdd" class="modal-actions">
-          <button class="btn-secondary" (click)="closeAddMemberModal()">Chiudi</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Group Info -->
-    <div class="group-info-section">
-      <div class="info-card">
-        <h2>Informazioni</h2>
-
-        <div class="info-item" *ngIf="group()!.description">
-          <label>Descrizione</label>
-          <p>{{ group()!.description }}</p>
-        </div>
-
-        <div class="info-item">
-          <label>Creato da</label>
-          <div class="creator-info">
-            <img
-              *ngIf="group()!.createdBy.avatarUrl"
-              [src]="group()!.createdBy.avatarUrl"
-              [alt]="group()!.createdBy.name"
-            />
-            <div *ngIf="!group()!.createdBy.avatarUrl" class="avatar-placeholder">
-              {{ group()!.createdBy.name.charAt(0).toUpperCase() }}
-            </div>
-            <div>
-              <div class="creator-name">{{ group()!.createdBy.name }}</div>
-              <div class="creator-email">{{ group()!.createdBy.email }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-item">
-          <label>Creato il</label>
-          <p>{{ formatDateTime(group()!.createdAt) }}</p>
-        </div>
-
-        <div class="info-item" *ngIf="group()!.updatedAt !== group()!.createdAt">
-          <label>Ultima modifica</label>
-          <p>{{ formatDateTime(group()!.updatedAt) }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Members Section -->
-    <div class="members-section">
-      <div class="section-header">
-        <h2>Membri ({{ group()!.members?.length || 0 }})</h2>
-        <button class="btn-primary" *ngIf="isAdmin()" (click)="openAddMemberModal()">
-          <ng-icon name="lucidePlus"></ng-icon>
-          Aggiungi Membro
-        </button>
-      </div>
-
-      <div class="members-grid">
-        <div *ngFor="let member of group()!.members" class="member-card">
-          <img
-            *ngIf="member.user.avatarUrl"
-            [src]="member.user.avatarUrl"
-            [alt]="member.user.name"
-          />
-          <div *ngIf="!member.user.avatarUrl" class="avatar-placeholder-large">
-            {{ member.user.name.charAt(0).toUpperCase() }}
-          </div>
-
-          <div class="member-info">
-            <div class="member-name">{{ member.user.name }}</div>
-            <div class="member-email">{{ member.user.email }}</div>
-            <div class="member-role" [class.admin]="member.role === GroupRole.ADMIN">
-              {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
-            </div>
-            <div class="member-joined">Entrato il {{ formatDate(member.joinedAt) }}</div>
-          </div>
-
-          <!-- Azioni per Admin (non su se stesso) -->
-          <div class="member-actions" *ngIf="canModifyMember(member) || canRemoveMember(member)">
-            <button
-              class="btn-icon"
-              *ngIf="canModifyMember(member)"
-              (click)="toggleMemberRole(member)"
-              [title]="member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'"
-            >
-              <ng-icon name="lucideShield"></ng-icon>
-            </button>
-            <button
-              class="btn-icon btn-danger"
-              *ngIf="canRemoveMember(member)"
-              (click)="removeMember(member)"
-              title="Rimuovi dal gruppo"
-            >
-              <ng-icon name="lucideTrash2"></ng-icon>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="!group()!.members || group()!.members.length === 0" class="no-members">
-        <p>Nessun membro nel gruppo</p>
-      </div>
-    </div>
-  </div>
+      (cancel)="showRemoveMemberConfirm.set(false)"
+    >
+    </app-confirm-dialog>
+  }
 </div>

@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GroupService } from '../../../services/group.service';
 import { Group, GroupMember, GroupRole, AddMemberRequest, LeaveGroupStatus } from '../../../models/group.model';
 import { User } from '../../../models/user.model';
+import { ActivityService } from '../../../services/activity.service';
+import { ActivityCalendar, ActivityRequest, Activity } from '../../../models/activity.model';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
@@ -17,13 +19,29 @@ import {
 	lucideTrash2,
 	lucideLogOut,
 	lucidePlus,
-	lucideShield
+	lucideShield,
+	lucideChevronDown,
+	lucideChevronUp,
+	lucideList,
+	lucideMap
 } from '@ng-icons/lucide';
+import { GroupCalendarComponent } from './components/group-calendar/group-calendar.component';
+import { GroupActivitiesListComponent } from './components/group-activities-list/group-activities-list.component';
+import { ActivityModalComponent } from './components/activity-modal/activity-modal.component';
 
 @Component({
 	selector: 'app-group-detail',
 	standalone: true,
-	imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmDialogComponent, NgIconComponent],
+	imports: [
+		CommonModule,
+		ReactiveFormsModule,
+		FormsModule,
+		ConfirmDialogComponent,
+		NgIconComponent,
+		GroupCalendarComponent,
+		GroupActivitiesListComponent,
+		ActivityModalComponent
+	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
 	viewProviders: [provideIcons({
@@ -33,11 +51,16 @@ import {
 		lucideTrash2,
 		lucideLogOut,
 		lucidePlus,
-		lucideShield
+		lucideShield,
+		lucideChevronDown,
+		lucideChevronUp,
+		lucideList,
+		lucideMap
 	})]
 })
 export class GroupDetailComponent implements OnInit {
 	private groupService = inject(GroupService);
+	private activityService = inject(ActivityService);
 	private router = inject(Router);
 	private route = inject(ActivatedRoute);
 	private fb = inject(FormBuilder);
@@ -48,6 +71,21 @@ export class GroupDetailComponent implements OnInit {
 	loading = signal(false);
 	error = signal<string | null>(null);
 	showDeleteConfirm = signal(false);
+
+	// Tabs for mobile-first layout
+	activeTab = signal<'calendar' | 'activities' | 'map' | 'members' | 'info'>('calendar');
+
+	// Calendar & Activities
+	activities = signal<ActivityCalendar[]>([]);
+	loadingActivities = signal(false);
+	selectedDate = signal<Date | null>(null);
+	showActivityModal = signal(false);
+	activityToEdit = signal<Activity | null>(null);
+	savingActivity = signal(false);
+
+	// Collapsible sections (collapsed by default)
+	groupInfoCollapsed = signal(true);
+	membersCollapsed = signal(true);
 
 	// Add member modal
 	showAddMemberModal = signal(false);
@@ -83,6 +121,7 @@ export class GroupDetailComponent implements OnInit {
 			const id = +params['id'];
 			if (id) {
 				this.loadGroup(id);
+				this.loadActivities(id);
 			}
 		});
 	}
@@ -383,5 +422,101 @@ export class GroupDetailComponent implements OnInit {
 	selectRole(role: GroupRole) {
 		this.selectedRole = role;
 		this.roleDropdownOpen = false;
+	}
+
+	toggleGroupInfo() {
+		this.groupInfoCollapsed.set(!this.groupInfoCollapsed());
+	}
+
+	toggleMembers() {
+		this.membersCollapsed.set(!this.membersCollapsed());
+	}
+
+	// ==================== CALENDAR & ACTIVITIES ====================
+
+	loadActivities(groupId: number) {
+		this.loadingActivities.set(true);
+		this.activityService.getAllActivitiesCalendar(groupId).subscribe({
+			next: (activities) => {
+				this.activities.set(activities);
+				this.loadingActivities.set(false);
+			},
+			error: (err) => {
+				console.error('Error loading activities:', err);
+				this.error.set('Errore nel caricamento delle attività');
+				this.loadingActivities.set(false);
+			}
+		});
+	}
+
+	onDateSelected(date: Date) {
+		this.selectedDate.set(date);
+		// Scroll to activities list on mobile
+		if (window.innerWidth < 768) {
+			setTimeout(() => {
+				document.querySelector('.activities-section')?.scrollIntoView({
+					behavior: 'smooth',
+					block: 'start'
+				});
+			}, 100);
+		}
+	}
+
+	onAddActivity(date: Date) {
+		this.selectedDate.set(date);
+		this.activityToEdit.set(null);
+		this.showActivityModal.set(true);
+	}
+
+	onActivityClick(activity: ActivityCalendar) {
+		const currentGroup = this.group();
+		if (!currentGroup) return;
+
+		// Carica i dettagli completi dell'attività
+		this.activityService.getActivity(currentGroup.id, activity.id).subscribe({
+			next: (fullActivity) => {
+				this.activityToEdit.set(fullActivity);
+				this.showActivityModal.set(true);
+			},
+			error: (err) => {
+				console.error('Error loading activity details:', err);
+				this.error.set('Errore nel caricamento dei dettagli');
+			}
+		});
+	}
+
+	onSaveActivity(request: ActivityRequest) {
+		const currentGroup = this.group();
+		if (!currentGroup) return;
+
+		const activityToEdit = this.activityToEdit();
+		this.savingActivity.set(true);
+
+		const operation = activityToEdit
+			? this.activityService.updateActivity(currentGroup.id, activityToEdit.id, request)
+			: this.activityService.createActivity(currentGroup.id, request);
+
+		operation.subscribe({
+			next: () => {
+				this.savingActivity.set(false);
+				this.showActivityModal.set(false);
+				this.activityToEdit.set(null);
+				this.loadActivities(currentGroup.id);
+			},
+			error: (err) => {
+				console.error('Error saving activity:', err);
+				this.error.set('Errore nel salvataggio dell\'attività');
+				this.savingActivity.set(false);
+			}
+		});
+	}
+
+	closeActivityModal() {
+		this.showActivityModal.set(false);
+		this.activityToEdit.set(null);
+	}
+
+	setActiveTab(tab: 'calendar' | 'activities' | 'members' | 'info') {
+		this.activeTab.set(tab);
 	}
 }

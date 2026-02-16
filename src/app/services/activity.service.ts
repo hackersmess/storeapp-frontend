@@ -19,7 +19,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ActivityService {
 	private http = inject(HttpClient);
-	private apiUrl = '/api/groups';
+	private apiUrl = '/api';
 
 	// ================== CRUD Activities ==================
 
@@ -74,7 +74,7 @@ export class ActivityService {
 	 * Ottiene tutte le attività in formato calendario
 	 */
 	getAllActivitiesCalendar(groupId: number): Observable<ActivityCalendar[]> {
-		return this.http.get<ActivityCalendar[]>(`${this.apiUrl}/groups/${groupId}/calendar/all`);
+		return this.http.get<ActivityCalendar[]>(`${this.apiUrl}/groups/${groupId}/calendar`);
 	}
 
 	/**
