@@ -104,6 +104,16 @@
           />
         </div>
 
+        <!-- Gestione spese (solo in modalità edit) -->
+        @if (isEditMode()) {
+          <div class="form-group">
+            <button type="button" class="btn btn-expense" (click)="onManageExpenses()">
+              <ng-icon name="lucideDollarSign" size="16"></ng-icon>
+              <span>Gestisci spese</span>
+            </button>
+          </div>
+        }
+
         <!-- Footer con bottoni -->
         <div class="modal-footer">
           <button

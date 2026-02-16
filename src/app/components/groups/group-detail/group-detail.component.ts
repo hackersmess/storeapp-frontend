@@ -28,6 +28,8 @@ import {
 import { GroupCalendarComponent } from './components/group-calendar/group-calendar.component';
 import { GroupActivitiesListComponent } from './components/group-activities-list/group-activities-list.component';
 import { ActivityModalComponent } from './components/activity-modal/activity-modal.component';
+import { ExpenseModalComponent } from './components/expense-modal/expense-modal.component';
+import { ExpenseRequest } from '../../../models/expense.model';
 
 @Component({
 	selector: 'app-group-detail',
@@ -40,7 +42,8 @@ import { ActivityModalComponent } from './components/activity-modal/activity-mod
 		NgIconComponent,
 		GroupCalendarComponent,
 		GroupActivitiesListComponent,
-		ActivityModalComponent
+		ActivityModalComponent,
+		ExpenseModalComponent
 	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
@@ -111,6 +114,11 @@ export class GroupDetailComponent implements OnInit {
 	leaveStatus: LeaveGroupStatus | null = null;
 	leaveConfirmMessage = signal<string>('');
 	leaveConfirmTitle = signal<string>('');
+
+	// Expense modal
+	showExpenseModal = signal(false);
+	expenseActivityId = signal<number>(0);
+	savingExpense = signal(false);
 
 	GroupRole = GroupRole;
 
@@ -518,5 +526,52 @@ export class GroupDetailComponent implements OnInit {
 
 	setActiveTab(tab: 'calendar' | 'activities' | 'members' | 'info') {
 		this.activeTab.set(tab);
+	}
+
+	// ==================== EXPENSES ====================
+
+	openExpenseModal(activityId: number) {
+		this.expenseActivityId.set(activityId);
+		this.showExpenseModal.set(true);
+	}
+
+	closeExpenseModal() {
+		this.showExpenseModal.set(false);
+		this.expenseActivityId.set(0);
+	}
+
+	onSaveExpense(request: ExpenseRequest) {
+		const currentGroup = this.group();
+		if (!currentGroup) return;
+
+		this.savingExpense.set(true);
+
+		// TODO: Create expense service and endpoint
+		// For now, just log the request
+		console.log('Saving expense:', request);
+
+		// Simulate API call
+		setTimeout(() => {
+			this.savingExpense.set(false);
+			this.closeExpenseModal();
+			// Reload activities to get updated totals
+			this.loadActivities(currentGroup.id);
+		}, 500);
+
+		/*
+		// Future implementation:
+		this.expenseService.createExpense(request).subscribe({
+			next: () => {
+				this.savingExpense.set(false);
+				this.closeExpenseModal();
+				this.loadActivities(currentGroup.id);
+			},
+			error: (err) => {
+				console.error('Error saving expense:', err);
+				this.savingExpense.set(false);
+				this.error.set('Errore durante il salvataggio della spesa');
+			}
+		});
+		*/
 	}
 }

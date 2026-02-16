@@ -27,9 +27,19 @@
             <div class="no-activities">Nessuna attività</div>
           } @else {
             @for (activity of day.activities; track activity.id) {
-              <div class="activity-item" (click)="onActivityClick(activity, $event)">
-                <span class="activity-time">{{ formatTime(activity.start) }}</span>
-                <span class="activity-title">{{ activity.title }}</span>
+              <div class="activity-item">
+                <div class="activity-info" (click)="onActivityClick(activity, $event)">
+                  <span class="activity-time">{{ formatTime(activity.start) }}</span>
+                  <span class="activity-title">{{ activity.title }}</span>
+                </div>
+                <button
+                  class="add-expense-btn"
+                  (click)="onAddExpense(activity.id, $event)"
+                  type="button"
+                  title="Aggiungi spesa"
+                >
+                  <ng-icon name="lucideDollarSign" size="14"></ng-icon>
+                </button>
               </div>
             }
           }

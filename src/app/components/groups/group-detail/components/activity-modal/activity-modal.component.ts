@@ -8,9 +8,11 @@ import {
 	lucideClock,
 	lucideMapPin,
 	lucideAlignLeft,
-	lucideSave
+	lucideSave,
+	lucideDollarSign
 } from '@ng-icons/lucide';
 import { Activity, ActivityRequest } from '../../../../../models/activity.model';
+import { GroupMember } from '../../../../../models/group.model';
 
 @Component({
 	selector: 'app-activity-modal',
@@ -24,7 +26,8 @@ import { Activity, ActivityRequest } from '../../../../../models/activity.model'
 		lucideClock,
 		lucideMapPin,
 		lucideAlignLeft,
-		lucideSave
+		lucideSave,
+		lucideDollarSign
 	})]
 })
 export class ActivityModalComponent implements OnInit {
@@ -35,10 +38,12 @@ export class ActivityModalComponent implements OnInit {
 	activity = input<Activity | null>(null);
 	prefilledDate = input<Date | null>(null);
 	loading = input<boolean>(false);
+	members = input<GroupMember[]>([]);
 
 	// Output events
 	close = output<void>();
 	save = output<ActivityRequest>();
+	manageExpenses = output<number>(); // activity ID
 
 	// Internal signals
 	activityForm!: FormGroup;
@@ -125,10 +130,18 @@ export class ActivityModalComponent implements OnInit {
 			startTime: formValue.startTime || undefined,
 			endTime: formValue.endTime || undefined,
 			locationName: formValue.locationName || undefined,
-			locationAddress: formValue.locationAddress || undefined
+			locationAddress: formValue.locationAddress || undefined,
+			participantUserIds: [] // Will be managed through expenses
 		};
 
 		this.save.emit(request);
+	}
+
+	onManageExpenses(): void {
+		const currentActivity = this.activity();
+		if (currentActivity) {
+			this.manageExpenses.emit(currentActivity.id);
+		}
 	}
 
 	private formatDateForInput(date: Date): string {

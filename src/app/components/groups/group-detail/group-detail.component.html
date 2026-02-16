@@ -96,6 +96,7 @@
                 (dateSelected)="onDateSelected($event)"
                 (activityClick)="onActivityClick($event)"
                 (createActivity)="onAddActivity($event)"
+                (addExpense)="openExpenseModal($event)"
               >
               </app-group-calendar>
             } @else {
@@ -230,10 +231,22 @@
       [activity]="activityToEdit()"
       [prefilledDate]="selectedDate()"
       [loading]="savingActivity()"
+      [members]="group()?.members || []"
       (close)="closeActivityModal()"
       (save)="onSaveActivity($event)"
+      (manageExpenses)="openExpenseModal($event)"
     >
     </app-activity-modal>
+
+    <!-- Expense Modal -->
+    <app-expense-modal
+      [activityId]="expenseActivityId()"
+      [members]="group()?.members || []"
+      [isOpen]="showExpenseModal()"
+      (close)="closeExpenseModal()"
+      (save)="onSaveExpense($event)"
+    >
+    </app-expense-modal>
 
     <!-- Add Member Modal -->
     @if (showAddMemberModal()) {

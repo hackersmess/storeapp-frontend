@@ -1,7 +1,7 @@
 import { Component, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucidePlus } from '@ng-icons/lucide';
+import { lucidePlus, lucideDollarSign } from '@ng-icons/lucide';
 import { ActivityCalendar } from '../../../../../models/activity.model';
 
 interface CalendarDay {
@@ -20,7 +20,8 @@ interface CalendarDay {
 	templateUrl: './group-calendar.component.html',
 	styleUrls: ['./group-calendar.component.scss'],
 	viewProviders: [provideIcons({
-		lucidePlus
+		lucidePlus,
+		lucideDollarSign
 	})]
 })
 export class GroupCalendarComponent {
@@ -34,6 +35,7 @@ export class GroupCalendarComponent {
 	dateSelected = output<Date>();
 	activityClick = output<ActivityCalendar>();
 	createActivity = output<Date>();
+	addExpense = output<number>(); // activity ID
 
 	// Internal signals
 	calendarDays = signal<CalendarDay[]>([]);
@@ -66,9 +68,10 @@ export class GroupCalendarComponent {
 			const isToday = dateOnly.getTime() === today.getTime();
 			const isSelected = selected ? dateOnly.getTime() === new Date(selected).setHours(0, 0, 0, 0) : false;
 
-			// Trova le activity per questo giorno
+			// Trova le activity per questo giorno usando activityDate
 			const dayActivities = this.activities().filter(activity => {
-				const actDate = new Date(activity.start);
+				if (!activity.activityDate) return false;
+				const actDate = new Date(activity.activityDate);
 				actDate.setHours(0, 0, 0, 0);
 				return actDate.getTime() === dateOnly.getTime();
 			}); days.push({
@@ -98,6 +101,11 @@ export class GroupCalendarComponent {
 	onCreateActivity(day: CalendarDay, event: Event): void {
 		event.stopPropagation();
 		this.createActivity.emit(day.date);
+	}
+
+	onAddExpense(activityId: number, event: Event): void {
+		event.stopPropagation();
+		this.addExpense.emit(activityId);
 	}
 
 	formatTime(dateString: string): string {

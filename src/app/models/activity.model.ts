@@ -148,6 +148,7 @@ export interface ActivityRequest {
 	locationMetadata?: Record<string, any>;
 	isCompleted?: boolean;
 	displayOrder?: number;
+	participantUserIds?: number[];
 }
 
 export interface ActivityParticipantRequest {
