@@ -25,10 +25,11 @@ import {
 	lucideList,
 	lucideMap
 } from '@ng-icons/lucide';
-import { GroupCalendarComponent } from './components/group-calendar/group-calendar.component';
-import { GroupActivitiesListComponent } from './components/group-activities-list/group-activities-list.component';
-import { ActivityModalComponent } from './components/activity-modal/activity-modal.component';
-import { ExpenseModalComponent } from './components/expense-modal/expense-modal.component';
+import { GroupCalendarComponent } from './group-calendar/group-calendar.component';
+import { GroupActivitiesListComponent } from './group-activities-list/group-activities-list.component';
+import { ActivityModalComponent } from './activity-modal/activity-modal.component';
+import { ExpenseModalComponent } from './expense-modal/expense-modal.component';
+import { AddMemberModalComponent } from './add-member-modal/add-member-modal.component';
 import { ExpenseRequest } from '../../../models/expense.model';
 
 @Component({
@@ -43,7 +44,8 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		GroupCalendarComponent,
 		GroupActivitiesListComponent,
 		ActivityModalComponent,
-		ExpenseModalComponent
+		ExpenseModalComponent,
+		AddMemberModalComponent
 	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
@@ -96,13 +98,7 @@ export class GroupDetailComponent implements OnInit {
 	searchResults: User[] = [];
 	searching = false;
 	addingMember = false;
-	showSearchResults = false;
-
-	// New: Selected user before confirming
-	selectedUserToAdd: User | null = null;
-	selectedRole: GroupRole = GroupRole.MEMBER;
-	searchQuery: string = '';
-	roleDropdownOpen = false;
+	currentSearchQuery = '';
 
 	// Confirm dialogs
 	showRemoveMemberConfirm = signal(false);
@@ -153,11 +149,10 @@ export class GroupDetailComponent implements OnInit {
 			.subscribe({
 				next: (users) => {
 					this.searchResults = users.filter(user =>
-						user.email.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-						user.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+						user.email.toLowerCase().includes(this.currentSearchQuery.toLowerCase()) ||
+						user.name.toLowerCase().includes(this.currentSearchQuery.toLowerCase())
 					);
 					this.searching = false;
-					this.showSearchResults = true;
 				},
 				error: (err) => {
 					console.error('Error searching users:', err);
@@ -167,6 +162,7 @@ export class GroupDetailComponent implements OnInit {
 	}
 
 	onSearchChange(query: string) {
+		this.currentSearchQuery = query;
 		this.searchQuery$.next(query);
 	}
 
@@ -364,49 +360,29 @@ export class GroupDetailComponent implements OnInit {
 
 	openAddMemberModal() {
 		this.showAddMemberModal.set(true);
-		this.searchQuery = '';
+		this.currentSearchQuery = '';
 		this.searchResults = [];
-		this.selectedUserToAdd = null;
-		this.selectedRole = GroupRole.MEMBER;
-		this.showSearchResults = false;
-		this.roleDropdownOpen = false;
 	}
 
 	closeAddMemberModal() {
 		this.showAddMemberModal.set(false);
 		this.searchResults = [];
-		this.searchQuery = '';
-		this.selectedUserToAdd = null;
-		this.selectedRole = GroupRole.MEMBER;
-		this.showSearchResults = false;
+		this.currentSearchQuery = '';
 	}
 
 	selectUserToAdd(user: User) {
-		this.selectedUserToAdd = user;
-		this.searchQuery = '';
-		this.searchResults = [];
-		this.showSearchResults = false;
+		// Método chamado pelo componente modal quando um usuário é selecionado
+		console.log('User selected:', user);
 	}
 
-	clearSelectedUser() {
-		this.selectedUserToAdd = null;
-		this.selectedRole = GroupRole.MEMBER;
-	}
-
-	hideSearchResults() {
-		setTimeout(() => {
-			this.showSearchResults = false;
-		}, 200);
-	}
-
-	confirmAddMember() {
+	onConfirmAddMember(event: { user: User; role: GroupRole }) {
 		const currentGroup = this.group();
-		if (!currentGroup || !this.selectedUserToAdd) return;
+		if (!currentGroup) return;
 
 		this.addingMember = true;
 		const request: AddMemberRequest = {
-			email: this.selectedUserToAdd.email,
-			role: this.selectedRole
+			email: event.user.email,
+			role: event.role
 		};
 
 		this.groupService.addMember(currentGroup.id, request).subscribe({
@@ -421,15 +397,6 @@ export class GroupDetailComponent implements OnInit {
 				this.addingMember = false;
 			}
 		});
-	}
-
-	toggleRoleDropdown() {
-		this.roleDropdownOpen = !this.roleDropdownOpen;
-	}
-
-	selectRole(role: GroupRole) {
-		this.selectedRole = role;
-		this.roleDropdownOpen = false;
 	}
 
 	toggleGroupInfo() {

@@ -1,0 +1,53 @@
+<div class="participants-selector">
+  <div class="selector-header">
+    <h3 class="selector-title">Partecipanti</h3>
+    <label class="toggle-all-btn" (click)="toggleAll(); $event.preventDefault()">
+      <input type="checkbox" [checked]="allSelected()" readonly />
+      <span>{{ allSelected() ? 'Deseleziona tutti' : 'Seleziona tutti' }}</span>
+    </label>
+  </div>
+
+  <div class="participants-list">
+    @for (member of members(); track member.id) {
+      <label
+        class="participant-item"
+        [class.selected]="isSelected(member.user.id)"
+        (click)="toggleMember(member.user.id); $event.preventDefault()"
+      >
+        <input
+          type="checkbox"
+          class="participant-checkbox-input"
+          [checked]="isSelected(member.user.id)"
+          readonly
+        />
+
+        <div class="participant-avatar">
+          @if (member.user.avatarUrl) {
+            <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+          } @else {
+            <div class="avatar-placeholder">
+              {{ member.user.name.charAt(0).toUpperCase() }}
+            </div>
+          }
+        </div>
+
+        <div class="participant-info">
+          <div class="participant-name">{{ member.user.name }}</div>
+          <div class="participant-email">{{ member.user.email }}</div>
+        </div>
+      </label>
+    }
+  </div>
+
+  @if (members().length === 0) {
+    <div class="empty-state">
+      <p>Nessun membro disponibile</p>
+    </div>
+  }
+
+  <div class="selection-summary">
+    <span class="summary-text">
+      {{ selectedIds().length }} di {{ members().length }} selezionati
+    </span>
+  </div>
+</div>

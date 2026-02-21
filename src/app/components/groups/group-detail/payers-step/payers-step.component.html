@@ -1,0 +1,62 @@
+<div class="payers-step">
+  <div class="step-header">
+    <h3 class="step-title">Chi ha pagato?</h3>
+    <p class="step-subtitle">Seleziona chi ha anticipato il pagamento e quanto</p>
+  </div>
+
+  <div class="payers-list">
+    @for (member of members(); track member.id) {
+      <div class="payer-item" [class.selected]="isPayer(member.id)">
+        <label class="payer-selector" (click)="togglePayer(member.id)">
+          <input type="checkbox" [checked]="isPayer(member.id)" readonly />
+
+          <div class="payer-avatar">
+            @if (member.user.avatarUrl) {
+              <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+            } @else {
+              <div class="avatar-placeholder">
+                {{ member.user.name.charAt(0).toUpperCase() }}
+              </div>
+            }
+          </div>
+
+          <div class="payer-info">
+            <div class="payer-name">{{ member.user.name }}</div>
+          </div>
+        </label>
+
+        @if (isPayer(member.id)) {
+          <div class="amount-input-container">
+            <input
+              type="number"
+              class="amount-input"
+              [value]="getAmount(member.id)"
+              (input)="updateAmount(member.id, $any($event.target).value)"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
+            <span class="currency">€</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (payers().size > 1) {
+    <button type="button" class="split-equally-btn" (click)="splitEqually()">
+      Dividi equamente tra i paganti
+    </button>
+  }
+
+  <div class="summary">
+    <div class="summary-row">
+      <span>Totale spesa:</span>
+      <span class="summary-value total">{{ totalPaid() | number: '1.2-2' }} €</span>
+    </div>
+  </div>
+
+  @if (!isValid()) {
+    <div class="error-message">Seleziona almeno un pagante con un importo maggiore di zero</div>
+  }
+</div>

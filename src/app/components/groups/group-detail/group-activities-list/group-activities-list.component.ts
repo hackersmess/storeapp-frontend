@@ -2,7 +2,7 @@ import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideCalendar, lucidePlus } from '@ng-icons/lucide';
-import { ActivityCalendar } from '../../../../../models/activity.model';
+import { ActivityCalendar } from '../../../../models/activity.model';
 import { ActivityCardComponent } from '../activity-card/activity-card.component';
 
 @Component({

@@ -2,7 +2,7 @@ import { Component, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucidePlus, lucideDollarSign } from '@ng-icons/lucide';
-import { ActivityCalendar } from '../../../../../models/activity.model';
+import { ActivityCalendar } from '../../../../models/activity.model';
 
 interface CalendarDay {
 	date: Date;

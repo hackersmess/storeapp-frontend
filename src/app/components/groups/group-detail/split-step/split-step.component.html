@@ -1,0 +1,115 @@
+<div class="split-step">
+  <div class="step-header">
+    <h3 class="step-title">Chi partecipa alla spesa?</h3>
+    <p class="step-subtitle">Seleziona i partecipanti e come dividere l'importo</p>
+  </div>
+
+  <div class="participants-header">
+    <label class="toggle-all-btn" (click)="toggleAll(); $event.preventDefault()">
+      <input type="checkbox" [checked]="allSelected()" readonly />
+      <span>{{ allSelected() ? 'Deseleziona tutti' : 'Seleziona tutti' }}</span>
+    </label>
+    <div class="selection-count">
+      {{ selectedMembers().size }} di {{ members().length }} selezionati
+    </div>
+  </div>
+
+  <div class="split-type-selector">
+    <button
+      type="button"
+      class="split-type-btn"
+      [class.active]="splitType() === 'equal'"
+      (click)="changeSplitType('equal')"
+    >
+      Equamente
+    </button>
+    <button
+      type="button"
+      class="split-type-btn"
+      [class.active]="splitType() === 'custom'"
+      (click)="changeSplitType('custom')"
+    >
+      Importi personalizzati
+    </button>
+  </div>
+
+  <div class="members-list">
+    @for (member of members(); track member.id) {
+      <div class="member-item" [class.selected]="isSelected(member.id)">
+        <label class="member-selector" (click)="toggleMember(member.id)">
+          <input type="checkbox" [checked]="isSelected(member.id)" readonly />
+
+          <div class="member-avatar">
+            @if (member.user.avatarUrl) {
+              <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+            } @else {
+              <div class="avatar-placeholder">
+                {{ member.user.name.charAt(0).toUpperCase() }}
+              </div>
+            }
+          </div>
+
+          <div class="member-info">
+            <div class="member-name">{{ member.user.name }}</div>
+          </div>
+        </label>
+
+        @if (isSelected(member.id)) {
+          <div class="amount-display">
+            @if (splitType() === 'equal') {
+              <span class="amount-value"
+                >{{ totalAmount() / selectedMembers().size | number: '1.2-2' }} €</span
+              >
+            } @else {
+              <div class="amount-input-container">
+                <input
+                  type="number"
+                  class="amount-input"
+                  [value]="getCustomAmount(member.id)"
+                  (input)="updateCustomAmount(member.id, $any($event.target).value)"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                />
+                <span class="currency">€</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (splitType() === 'custom' && selectedMembers().size > 0 && !isValid()) {
+    <button type="button" class="distribute-btn" (click)="distributeRemaining()">
+      Distribuisci la differenza equamente
+    </button>
+  }
+
+  <div class="summary" [class.valid]="isValid()" [class.invalid]="!isValid()">
+    <div class="summary-row">
+      <span>Totale da dividere:</span>
+      <span class="summary-value">{{ totalAmount() | number: '1.2-2' }} €</span>
+    </div>
+    <div class="summary-row">
+      <span>Totale assegnato:</span>
+      <span class="summary-value">{{ totalOwed() | number: '1.2-2' }} €</span>
+    </div>
+    @if (!isValid()) {
+      <div class="summary-row difference">
+        <span>{{ difference() > 0 ? 'Eccedenza:' : 'Mancante:' }}</span>
+        <span class="summary-value error">{{ abs(difference()) | number: '1.2-2' }} €</span>
+      </div>
+    }
+  </div>
+
+  @if (!isValid()) {
+    <div class="error-message">
+      @if (selectedMembers().size === 0) {
+        Seleziona almeno un partecipante
+      } @else {
+        Il totale assegnato deve corrispondere al totale da dividere
+      }
+    </div>
+  }
+</div>

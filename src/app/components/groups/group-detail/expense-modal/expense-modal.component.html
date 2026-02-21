@@ -1,0 +1,88 @@
+@if (isOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          @if (currentStep() === 1) {
+            Nuova spesa - Paganti
+          } @else {
+            Nuova spesa - Divisione
+          }
+        </h2>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>×</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Step 1: Basic info + Payers -->
+        @if (currentStep() === 1) {
+          <div class="step-1-container">
+            <div class="basic-info">
+              <div class="form-group">
+                <label for="description" class="required">Descrizione spesa</label>
+                <input
+                  id="description"
+                  type="text"
+                  class="form-input"
+                  [(ngModel)]="description"
+                  placeholder="es. Cena al ristorante"
+                  [class.error]="description().trim() === ''"
+                />
+                @if (description().trim() === '') {
+                  <span class="error-message">La descrizione è obbligatoria</span>
+                }
+              </div>
+            </div>
+
+            <app-payers-step
+              [members]="members()"
+              [initialPayers]="[]"
+              (payersChange)="onPayersChange($event)"
+              (validChange)="onPayersValidChange($event)"
+            />
+          </div>
+        }
+
+        <!-- Step 2: Splits -->
+        @if (currentStep() === 2) {
+          <app-split-step
+            [members]="members()"
+            [totalAmount]="totalAmount()"
+            [payers]="payers()"
+            (splitsChange)="onSplitsChange($event)"
+            (validChange)="onSplitsValidChange($event)"
+          />
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Annulla</button>
+
+        @if (currentStep() === 2) {
+          <button type="button" class="btn btn-secondary" (click)="previousStep()">Indietro</button>
+        }
+
+        @if (currentStep() === 1) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="nextStep()"
+            [disabled]="!canProceedToStep2()"
+          >
+            Avanti
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveExpense()"
+            [disabled]="!canSave()"
+          >
+            Salva spesa
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

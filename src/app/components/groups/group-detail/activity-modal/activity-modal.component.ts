@@ -11,8 +11,8 @@ import {
 	lucideSave,
 	lucideDollarSign
 } from '@ng-icons/lucide';
-import { Activity, ActivityRequest } from '../../../../../models/activity.model';
-import { GroupMember } from '../../../../../models/group.model';
+import { Activity, ActivityRequest } from '../../../../models/activity.model';
+import { GroupMember } from '../../../../models/group.model';
 
 @Component({
 	selector: 'app-activity-modal',

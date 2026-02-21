@@ -129,8 +129,20 @@
         @if (activeTab() === 'map') {
           <div class="map-section">
             <div class="empty-state">
+              <img
+                src="https://scontent.ftrn1-1.fna.fbcdn.net/v/t39.30808-6/509426912_1227744088794585_4538851867519113693_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=cwsO4Lp9qmcQ7kNvwGEjmDn&_nc_oc=AdlSi0WR4cDu4MCQr5Pp3YSxZGqxq0NTA8Oduw36F3tY6bih41crZwQOHabgwp16uos&_nc_zt=23&_nc_ht=scontent.ftrn1-1.fna&_nc_gid=k3c35QwB_G7yTLlrSzp-SQ&oh=00_Aftl5P2EmeCE9Oc8K5yu9MM6mjXr4ye2WmFVox-Kw-sGiA&oe=69996513"
+                alt="Mappa del tesoro"
+                class="map-placeholder-image"
+                style="
+                  max-width: 500px;
+                  border-radius: 12px;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                  margin: 0 auto 20px;
+                  display: block;
+                "
+              />
               <ng-icon name="lucideMap" size="48"></ng-icon>
-              <p>Funzionalità mappa in arrivo</p>
+              <p>🗺️ La mappa è in fase di sviluppo!</p>
               <p class="text-muted">
                 Qui potrai visualizzare la mappa con tutte le tappe del viaggio
               </p>
@@ -249,103 +261,17 @@
     </app-expense-modal>
 
     <!-- Add Member Modal -->
-    @if (showAddMemberModal()) {
-      <div class="modal-overlay" (click)="closeAddMemberModal()">
-        <div class="modal-container" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h2>Aggiungi Membro</h2>
-            <button class="close-btn" (click)="closeAddMemberModal()">×</button>
-          </div>
-
-          <div class="modal-body">
-            @if (!selectedUserToAdd) {
-              <div class="search-section">
-                <input
-                  type="text"
-                  class="search-input"
-                  placeholder="Cerca per email o nome..."
-                  [(ngModel)]="searchQuery"
-                  (input)="onSearchChange(searchQuery)"
-                  (blur)="hideSearchResults()"
-                />
-
-                @if (searching) {
-                  <div class="search-results">
-                    <div class="search-loading">Ricerca in corso...</div>
-                  </div>
-                }
-
-                @if (showSearchResults && searchResults.length > 0) {
-                  <div class="search-results">
-                    @for (user of searchResults; track user.id) {
-                      <div class="search-result-item" (mousedown)="selectUserToAdd(user)">
-                        <div class="user-info">
-                          <strong>{{ user.name }}</strong>
-                          <span class="user-email">{{ user.email }}</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-
-                @if (
-                  showSearchResults &&
-                  searchResults.length === 0 &&
-                  !searching &&
-                  searchQuery.length >= 2
-                ) {
-                  <div class="search-results">
-                    <div class="no-results">Nessun utente trovato</div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="selected-user-section">
-                <div class="selected-user">
-                  <div class="user-info">
-                    <strong>{{ selectedUserToAdd.name }}</strong>
-                    <span class="user-email">{{ selectedUserToAdd.email }}</span>
-                  </div>
-                  <button class="clear-btn" (click)="clearSelectedUser()">×</button>
-                </div>
-
-                <div class="role-selection">
-                  <label>Ruolo:</label>
-                  <div class="role-dropdown">
-                    <button class="role-btn" (click)="toggleRoleDropdown()">
-                      {{ selectedRole === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
-                      <ng-icon name="lucideChevronDown"></ng-icon>
-                    </button>
-                    @if (roleDropdownOpen) {
-                      <div class="role-options">
-                        <div class="role-option" (click)="selectRole(GroupRole.MEMBER)">Membro</div>
-                        <div class="role-option" (click)="selectRole(GroupRole.ADMIN)">
-                          <ng-icon name="lucideShield"></ng-icon>
-                          Admin
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn-secondary" (click)="closeAddMemberModal()" [disabled]="addingMember">
-              Annulla
-            </button>
-            <button
-              class="btn-primary"
-              (click)="confirmAddMember()"
-              [disabled]="!selectedUserToAdd || addingMember"
-            >
-              {{ addingMember ? 'Aggiunta in corso...' : 'Aggiungi' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    }
+    <app-add-member-modal
+      [show]="showAddMemberModal()"
+      [searchResults]="searchResults"
+      [searching]="searching"
+      [addingMember]="addingMember"
+      (close)="closeAddMemberModal()"
+      (searchChange)="onSearchChange($event)"
+      (userSelected)="selectUserToAdd($event)"
+      (confirmAdd)="onConfirmAddMember($event)"
+    >
+    </app-add-member-modal>
 
     <!-- Confirmation Dialogs -->
     <app-confirm-dialog

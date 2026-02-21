@@ -8,7 +8,7 @@ import {
 	lucideCheckCircle,
 	lucideCircle
 } from '@ng-icons/lucide';
-import { ActivityCalendar } from '../../../../../models/activity.model';
+import { ActivityCalendar } from '../../../../models/activity.model';
 
 @Component({
 	selector: 'app-activity-card',

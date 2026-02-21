@@ -1,0 +1,93 @@
+<div class="modal-overlay" (click)="onClose()" *ngIf="show()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Aggiungi Membro</h2>
+      <button class="close-btn" (click)="onClose()">×</button>
+    </div>
+
+    <div class="modal-body">
+      @if (!selectedUser()) {
+        <div class="search-section">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Cerca per email o nome..."
+            [value]="searchQuery()"
+            (input)="onSearchChange($any($event.target).value)"
+            (blur)="hideSearchResults()"
+          />
+
+          @if (searching()) {
+            <div class="search-results">
+              <div class="search-loading">Ricerca in corso...</div>
+            </div>
+          }
+
+          @if (showSearchResults() && searchResults().length > 0) {
+            <div class="search-results">
+              @for (user of searchResults(); track user.id) {
+                <div class="search-result-item" (mousedown)="selectUser(user)">
+                  <div class="user-info">
+                    <strong>{{ user.name }}</strong>
+                    <span class="user-email">{{ user.email }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (
+            showSearchResults() &&
+            searchResults().length === 0 &&
+            !searching() &&
+            searchQuery().length >= 2
+          ) {
+            <div class="search-results">
+              <div class="no-results">Nessun utente trovato</div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="selected-user-section">
+          <div class="selected-user">
+            <div class="user-info">
+              <strong>{{ selectedUser()!.name }}</strong>
+              <span class="user-email">{{ selectedUser()!.email }}</span>
+            </div>
+            <button class="clear-btn" (click)="clearSelectedUser()">×</button>
+          </div>
+
+          <div class="role-selection">
+            <label>Ruolo:</label>
+            <div class="role-dropdown">
+              <button class="role-btn" (click)="toggleRoleDropdown()">
+                {{ selectedRole() === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+                <ng-icon name="lucideChevronDown"></ng-icon>
+              </button>
+              @if (roleDropdownOpen()) {
+                <div class="role-options">
+                  <div class="role-option" (click)="selectRole(GroupRole.MEMBER)">Membro</div>
+                  <div class="role-option" (click)="selectRole(GroupRole.ADMIN)">
+                    <ng-icon name="lucideShield"></ng-icon>
+                    Admin
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="onClose()" [disabled]="addingMember()">Annulla</button>
+      <button
+        class="btn-primary"
+        (click)="onConfirm()"
+        [disabled]="!selectedUser() || addingMember()"
+      >
+        {{ addingMember() ? 'Aggiunta in corso...' : 'Aggiungi' }}
+      </button>
+    </div>
+  </div>
+</div>
