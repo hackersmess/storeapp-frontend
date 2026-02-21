@@ -30,6 +30,7 @@ import { GroupActivitiesListComponent } from './group-activities-list/group-acti
 import { ActivityModalComponent } from './activity-modal/activity-modal.component';
 import { ExpenseModalComponent } from './expense-modal/expense-modal.component';
 import { AddMemberModalComponent } from './add-member-modal/add-member-modal.component';
+import { MembersListComponent } from '../shared/members-list/members-list.component';
 import { ExpenseRequest } from '../../../models/expense.model';
 
 @Component({
@@ -45,7 +46,8 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		GroupActivitiesListComponent,
 		ActivityModalComponent,
 		ExpenseModalComponent,
-		AddMemberModalComponent
+		AddMemberModalComponent,
+		MembersListComponent
 	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
@@ -95,9 +97,9 @@ export class GroupDetailComponent implements OnInit {
 	// Add member modal
 	showAddMemberModal = signal(false);
 	searchQuery$ = new Subject<string>();
-	searchResults: User[] = [];
-	searching = false;
-	addingMember = false;
+	searchResults = signal<User[]>([]);
+	searching = signal(false);
+	addingMember = signal(false);
 
 	// Confirm dialogs
 	showRemoveMemberConfirm = signal(false);
@@ -137,11 +139,11 @@ export class GroupDetailComponent implements OnInit {
 				switchMap(query => {
 					const currentGroup = this.group();
 					if (!query || query.length < 2 || !currentGroup) {
-						this.searchResults = [];
-						this.searching = false;
+						this.searchResults.set([]);
+						this.searching.set(false);
 						return [];
 					}
-					this.searching = true;
+					this.searching.set(true);
 					// 🚀 Passa la query al backend per filtrare lato server
 					return this.groupService.getAvailableUsers(currentGroup.id, query);
 				})
@@ -149,12 +151,12 @@ export class GroupDetailComponent implements OnInit {
 			.subscribe({
 				next: (users) => {
 					// ✨ Gli utenti arrivano già filtrati dal backend
-					this.searchResults = users;
-					this.searching = false;
+					this.searchResults.set(users);
+					this.searching.set(false);
 				},
 				error: (err) => {
 					console.error('Error searching users:', err);
-					this.searching = false;
+					this.searching.set(false);
 				}
 			});
 	}
@@ -357,12 +359,12 @@ export class GroupDetailComponent implements OnInit {
 
 	openAddMemberModal() {
 		this.showAddMemberModal.set(true);
-		this.searchResults = [];
+		this.searchResults.set([]);
 	}
 
 	closeAddMemberModal() {
 		this.showAddMemberModal.set(false);
-		this.searchResults = [];
+		this.searchResults.set([]);
 	}
 
 	selectUserToAdd(user: User) {
@@ -374,7 +376,7 @@ export class GroupDetailComponent implements OnInit {
 		const currentGroup = this.group();
 		if (!currentGroup) return;
 
-		this.addingMember = true;
+		this.addingMember.set(true);
 		const request: AddMemberRequest = {
 			email: event.user.email,
 			role: event.role
@@ -382,14 +384,14 @@ export class GroupDetailComponent implements OnInit {
 
 		this.groupService.addMember(currentGroup.id, request).subscribe({
 			next: () => {
-				this.addingMember = false;
+				this.addingMember.set(false);
 				this.closeAddMemberModal();
 				this.loadGroup(currentGroup.id);
 			},
 			error: (err) => {
 				console.error('Error adding member:', err);
 				this.error.set('Errore nell\'aggiunta del membro');
-				this.addingMember = false;
+				this.addingMember.set(false);
 			}
 		});
 	}

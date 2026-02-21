@@ -218,67 +218,69 @@
 
       @if (isEditMode() && isAdmin()) {
         <div class="form-section">
-          <h2>Membri del Gruppo</h2>
-          <p class="section-description">
-            Gestisci i membri del gruppo. Puoi aggiungere nuovi membri dalla pagina di dettaglio.
-          </p>
+          <!-- Search section for adding members -->
+          <div class="form-group search-container">
+            <label for="memberSearch">Cerca utenti da aggiungere</label>
+            <div class="search-input-wrapper">
+              <input
+                id="memberSearch"
+                type="text"
+                formControlName="memberSearch"
+                placeholder="Cerca per username o email..."
+                (focus)="showSearchResults.set(true)"
+                (blur)="hideSearchResults()"
+              />
+              @if (searching()) {
+                <div class="search-spinner">
+                  <div class="spinner-small"></div>
+                </div>
+              }
+            </div>
 
-          @if (selectedMembers.length > 0) {
-            <div class="selected-members">
-              <h3>Membri Attuali ({{ selectedMembers.length }})</h3>
-              <div class="members-list">
-                @for (member of selectedMembers; track member.user.id) {
-                  <div class="member-item">
-                    @if (member.user.avatarUrl) {
-                      <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
+            @if (showSearchResults() && searchResults().length > 0) {
+              <div class="search-results">
+                @for (user of searchResults(); track user.id) {
+                  <div class="search-result-item" (click)="selectUser(user)">
+                    @if (user.avatarUrl) {
+                      <img [src]="user.avatarUrl" [alt]="user.name" />
                     }
-                    @if (!member.user.avatarUrl) {
+                    @if (!user.avatarUrl) {
                       <div class="avatar-placeholder">
-                        {{ member.user.name.charAt(0).toUpperCase() }}
+                        {{ user.name.charAt(0).toUpperCase() }}
                       </div>
                     }
-                    <div class="member-info">
-                      <div class="member-name">{{ member.user.name }}</div>
-                      <div class="member-email">{{ member.user.email }}</div>
-                      <div class="member-role" [class.admin]="member.role === GroupRole.ADMIN">
-                        {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
-                      </div>
-                    </div>
-                    <div class="member-actions">
-                      @if (canModifyMember(member.user.id)) {
-                        <button
-                          type="button"
-                          class="role-toggle"
-                          (click)="toggleRole(member.user.id)"
-                          [class.admin]="member.role === GroupRole.ADMIN"
-                          title="{{
-                            member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin'
-                          }}"
-                        >
-                          {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
-                        </button>
-                      }
-                      @if (!canModifyMember(member.user.id)) {
-                        <span class="role-badge" [class.admin]="member.role === GroupRole.ADMIN">
-                          {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
-                        </span>
-                      }
-                      @if (canRemoveMember(member.user.id)) {
-                        <button
-                          type="button"
-                          class="btn-remove"
-                          (click)="removeMember(member.user.id)"
-                          title="Rimuovi"
-                        >
-                          ×
-                        </button>
-                      }
+                    <div class="user-info">
+                      <div class="user-name">{{ user.name }}</div>
+                      <div class="user-email">{{ user.email }}</div>
                     </div>
                   </div>
                 }
               </div>
-            </div>
-          }
+            }
+
+            @if (
+              showSearchResults() &&
+              searchResults().length === 0 &&
+              groupForm.get('memberSearch')?.value &&
+              !searching()
+            ) {
+              <div class="search-no-results">
+                <p>Nessun utente trovato</p>
+              </div>
+            }
+          </div>
+
+          <!-- Members list -->
+          <app-members-list
+            [members]="getGroupMembers()"
+            [isAdmin]="true"
+            [showAddButton]="false"
+            [title]="'Membri Attuali'"
+            [description]="''"
+            (removeMember)="removeMemberFromGroup($event)"
+            (toggleRole)="toggleMemberRole($event)"
+          >
+          </app-members-list>
         </div>
       }
 

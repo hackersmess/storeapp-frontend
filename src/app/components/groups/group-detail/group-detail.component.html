@@ -152,69 +152,19 @@
 
         <!-- Members Tab -->
         @if (activeTab() === 'members') {
-          <div class="members-section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <ng-icon name="lucideUsers"></ng-icon>
-                Membri del gruppo
-              </h2>
-              @if (isAdmin()) {
-                <button class="btn-primary" (click)="openAddMemberModal()">
-                  <ng-icon name="lucidePlus"></ng-icon>
-                  <span>Aggiungi</span>
-                </button>
-              }
-            </div>
-
-            <div class="members-list">
-              @for (member of group()!.members; track member.id) {
-                <div class="member-card">
-                  <div class="member-info">
-                    <div class="member-avatar">
-                      @if (member.user.avatarUrl) {
-                        <img [src]="member.user.avatarUrl" [alt]="member.user.name" />
-                      } @else {
-                        <div class="avatar-placeholder">
-                          {{ member.user.name.charAt(0).toUpperCase() }}
-                        </div>
-                      }
-                    </div>
-                    <div class="member-details">
-                      <h4 class="member-name">{{ member.user.name }}</h4>
-                      <p class="member-email">{{ member.user.email }}</p>
-                    </div>
-                    @if (member.role === GroupRole.ADMIN) {
-                      <span class="role-badge admin">
-                        <ng-icon name="lucideShield" size="14"></ng-icon>
-                        Admin
-                      </span>
-                    } @else {
-                      <span class="role-badge member">Membro</span>
-                    }
-                  </div>
-
-                  @if (isAdmin() && canModifyMember(member)) {
-                    <div class="member-actions">
-                      <button
-                        class="action-btn"
-                        (click)="toggleMemberRole(member)"
-                        title="Cambia ruolo"
-                      >
-                        <ng-icon name="lucideShield"></ng-icon>
-                      </button>
-                      <button
-                        class="action-btn danger"
-                        (click)="removeMember(member)"
-                        title="Rimuovi"
-                      >
-                        <ng-icon name="lucideTrash2"></ng-icon>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
+          <app-members-list
+            [members]="group()!.members"
+            [isAdmin]="isAdmin()"
+            [showAddButton]="true"
+            [title]="'Membri del Gruppo'"
+            [description]="
+              'Gestisci i membri del gruppo. Gli admin possono aggiungere, rimuovere membri e modificare i ruoli.'
+            "
+            (addMember)="openAddMemberModal()"
+            (removeMember)="removeMember($event)"
+            (toggleRole)="toggleMemberRole($event)"
+          >
+          </app-members-list>
         }
       </div>
 
@@ -263,9 +213,9 @@
     <!-- Add Member Modal -->
     <app-add-member-modal
       [show]="showAddMemberModal()"
-      [searchResults]="searchResults"
-      [searching]="searching"
-      [addingMember]="addingMember"
+      [searchResults]="searchResults()"
+      [searching]="searching()"
+      [addingMember]="addingMember()"
       (close)="closeAddMemberModal()"
       (searchChange)="onSearchChange($event)"
       (userSelected)="selectUserToAdd($event)"

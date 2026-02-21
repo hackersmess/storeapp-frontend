@@ -4,15 +4,16 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { GroupRole } from '../../../models/group.model';
+import { GroupRole, GroupMember, AddMemberRequest } from '../../../models/group.model';
 import { User, UserBasic } from '../../../models/user.model';
 import { GroupService } from '../../../services/group.service';
 import { AuthService } from '../../../services/auth.service';
+import { MembersListComponent } from '../shared/members-list/members-list.component';
 
 @Component({
 	selector: 'app-group-form',
 	standalone: true,
-	imports: [CommonModule, ReactiveFormsModule],
+	imports: [CommonModule, ReactiveFormsModule, MembersListComponent],
 	templateUrl: './group-form.component.html',
 	styleUrls: ['./group-form.component.scss']
 })
@@ -82,23 +83,31 @@ export class GroupFormComponent implements OnInit {
 						return [];
 					}
 					this.searching.set(true);
-					// Se in modalità edit, usa getAvailableUsers per escludere i membri già presenti
-					// Altrimenti usa getAllUsers per la creazione iniziale
+					
+					// Se in modalità edit, usa getAvailableUsers con la query per escludere i membri già presenti
+					// Altrimenti usa searchUsers per la creazione iniziale
 					if (this.isEditMode() && this.groupId) {
-						return this.groupService.getAvailableUsers(this.groupId);
+						// 🚀 Modalità edit: Backend filtra per query ed esclude i membri del gruppo
+						return this.groupService.getAvailableUsers(this.groupId, query);
 					} else {
-						return this.groupService.getAllUsers();
+						// 🚀 Modalità creazione: Backend filtra solo per query (nessun gruppo da escludere)
+						return this.groupService.searchUsers(query);
 					}
 				})
 			)
 			.subscribe({
 				next: (users) => {
-					const query = this.groupForm.get('memberSearch')?.value.toLowerCase();
-					this.searchResults.set(users.filter(user =>
-						(user.email.toLowerCase().includes(query) ||
-							user.name.toLowerCase().includes(query)) &&
-						!this.selectedMembers.some(m => m.user.id === user.id)
-					));
+					// In modalità edit, gli utenti arrivano già filtrati dal backend (esclusi i membri)
+					// In modalità creazione, filtriamo lato client solo per escludere i membri selezionati localmente
+					if (this.isEditMode()) {
+						// ✅ Backend ha già filtrato per query ed escluso i membri del gruppo
+						this.searchResults.set(users);
+					} else {
+						// ✅ Backend ha già filtrato per query, escludiamo solo i membri selezionati localmente
+						this.searchResults.set(users.filter(user =>
+							!this.selectedMembers.some(m => m.user.id === user.id)
+						));
+					}
 					this.searching.set(false);
 					this.showSearchResults.set(true);
 				},
@@ -153,23 +162,124 @@ export class GroupFormComponent implements OnInit {
 	}
 
 	selectUser(user: User) {
-		if (!this.selectedMembers.some(m => m.user.id === user.id)) {
-			this.selectedMembers.push({ user, role: GroupRole.MEMBER });
+		// In modalità edit, aggiungi il membro immediatamente al database
+		if (this.isEditMode() && this.groupId) {
+			this.addMemberToGroup(user);
+		} else {
+			// In modalità creazione, aggiungi solo alla lista locale
+			if (!this.selectedMembers.some(m => m.user.id === user.id)) {
+				this.selectedMembers.push({ user, role: GroupRole.MEMBER });
+			}
 		}
+		
 		this.groupForm.patchValue({ memberSearch: '' });
 		this.searchResults.set([]);
 		this.showSearchResults.set(false);
 	}
 
+	/**
+	 * Aggiunge immediatamente un membro al gruppo (solo in modalità edit)
+	 */
+	private addMemberToGroup(user: User) {
+		if (!this.groupId) return;
+
+		this.loading.set(true);
+		const request: AddMemberRequest = {
+			email: user.email,
+			role: GroupRole.MEMBER
+		};
+
+		this.groupService.addMember(this.groupId, request).subscribe({
+			next: () => {
+				// Ricarica il gruppo per avere i dati aggiornati
+				this.loadGroup();
+			},
+			error: (err) => {
+				console.error('Error adding member:', err);
+				this.error.set('Errore nell\'aggiunta del membro: ' + (err.error?.message || err.message));
+				this.loading.set(false);
+			}
+		});
+	}
+
 	removeMember(userId: number) {
-		this.selectedMembers = this.selectedMembers.filter(m => m.user.id !== userId);
+		// In modalità edit, rimuovi il membro dal database
+		if (this.isEditMode() && this.groupId) {
+			const member = this.selectedMembers.find(m => m.user.id === userId);
+			if (member) {
+				// Trova l'ID del membro nel gruppo (non l'ID dell'utente!)
+				const currentGroup = this.selectedMembers;
+				const memberIndex = currentGroup.findIndex(m => m.user.id === userId);
+				
+				// Dobbiamo trovare il memberId dal gruppo caricato
+				this.removeMemberFromGroupDB(userId);
+			}
+		} else {
+			// In modalità creazione, rimuovi solo dalla lista locale
+			this.selectedMembers = this.selectedMembers.filter(m => m.user.id !== userId);
+		}
+	}
+
+	/**
+	 * Rimuove immediatamente un membro dal gruppo (solo in modalità edit)
+	 */
+	private removeMemberFromGroupDB(userId: number) {
+		if (!this.groupId) return;
+
+		// Trova il memberId (GroupMember.id) dall'userId
+		const member = this.selectedMembers.find(m => m.user.id === userId);
+		if (!member) return;
+
+		this.loading.set(true);
+		
+		// Usa l'userId come memberId (in realtà dovremmo avere il GroupMember.id)
+		// Per ora usiamo l'userId perché selectedMembers non ha il memberId
+		this.groupService.removeMember(this.groupId, userId).subscribe({
+			next: () => {
+				// Ricarica il gruppo per avere i dati aggiornati
+				this.loadGroup();
+			},
+			error: (err) => {
+				console.error('Error removing member:', err);
+				this.error.set('Errore nella rimozione del membro: ' + (err.error?.message || err.message));
+				this.loading.set(false);
+			}
+		});
 	}
 
 	toggleRole(userId: number) {
 		const member = this.selectedMembers.find(m => m.user.id === userId);
-		if (member) {
+		if (!member) return;
+
+		// In modalità edit, aggiorna il ruolo nel database
+		if (this.isEditMode() && this.groupId) {
+			const newRole = member.role === GroupRole.ADMIN ? GroupRole.MEMBER : GroupRole.ADMIN;
+			this.updateMemberRoleInDB(userId, newRole);
+		} else {
+			// In modalità creazione, aggiorna solo localmente
 			member.role = member.role === GroupRole.ADMIN ? GroupRole.MEMBER : GroupRole.ADMIN;
 		}
+	}
+
+	/**
+	 * Aggiorna il ruolo di un membro nel database (solo in modalità edit)
+	 */
+	private updateMemberRoleInDB(userId: number, newRole: GroupRole) {
+		if (!this.groupId) return;
+
+		this.loading.set(true);
+
+		this.groupService.updateMemberRole(this.groupId, userId, { role: newRole }).subscribe({
+			next: () => {
+				// Ricarica il gruppo per avere i dati aggiornati
+				this.loadGroup();
+			},
+			error: (err) => {
+				console.error('Error updating member role:', err);
+				this.error.set('Errore nell\'aggiornamento del ruolo: ' + (err.error?.message || err.message));
+				this.loading.set(false);
+			}
+		});
 	}
 
 	onSubmit() {
@@ -253,5 +363,36 @@ export class GroupFormComponent implements OnInit {
 		if (this.isCurrentUser(userId)) return false;
 		// Solo gli admin possono rimuovere altri membri
 		return this.isAdmin();
+	}
+
+	// Metodi per il componente condiviso members-list
+	getGroupMembers(): GroupMember[] {
+		return this.selectedMembers.map(m => ({
+			id: m.user.id,
+			groupId: this.groupId || 0,
+			user: m.user,
+			role: m.role,
+			joinedAt: new Date().toISOString()
+		}));
+	}
+
+	openAddMemberSearch() {
+		// Trigger the search input to show (potremmo aprire una modale o espandere la sezione)
+		this.showSearchResults.set(true);
+		// Focus on search input
+		setTimeout(() => {
+			const searchInput = document.getElementById('memberSearch') as HTMLInputElement;
+			if (searchInput) {
+				searchInput.focus();
+			}
+		}, 100);
+	}
+
+	removeMemberFromGroup(member: GroupMember) {
+		this.removeMember(member.user.id);
+	}
+
+	toggleMemberRole(member: GroupMember) {
+		this.toggleRole(member.user.id);
 	}
 }

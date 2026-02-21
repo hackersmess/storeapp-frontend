@@ -1,0 +1,83 @@
+<div class="members-section">
+  <div class="section-header">
+    <div class="header-content">
+      <h2 class="section-title">
+        <ng-icon name="lucideShield"></ng-icon>
+        {{ title }}
+      </h2>
+      @if (description) {
+        <p class="section-description">{{ description }}</p>
+      }
+    </div>
+    @if (showAddButton && isAdmin) {
+      <button type="button" class="btn-add" (click)="onAddMember()">
+        <ng-icon name="lucidePlus"></ng-icon>
+        <span>Aggiungi</span>
+      </button>
+    }
+  </div>
+
+  @if (members.length > 0) {
+    <div class="members-list">
+      <h3>Membri ({{ members.length }})</h3>
+      @for (member of members; track member.id) {
+        <div class="member-item">
+          @if (member.user.avatarUrl) {
+            <img [src]="member.user.avatarUrl" [alt]="member.user.name" class="member-avatar" />
+          }
+          @if (!member.user.avatarUrl) {
+            <div class="avatar-placeholder">
+              {{ member.user.name.charAt(0).toUpperCase() }}
+            </div>
+          }
+          <div class="member-info">
+            <div class="member-name">{{ member.user.name }}</div>
+            <div class="member-email">{{ member.user.email }}</div>
+            <div class="member-role" [class.admin]="member.role === GroupRole.ADMIN">
+              <ng-icon
+                name="lucideShield"
+                size="14"
+                [class.admin-icon]="member.role === GroupRole.ADMIN"
+              ></ng-icon>
+              {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+            </div>
+          </div>
+          <div class="member-actions">
+            @if (canModifyMember(member)) {
+              <button
+                type="button"
+                class="role-toggle"
+                (click)="onToggleRole(member)"
+                [class.admin]="member.role === GroupRole.ADMIN"
+                title="{{ member.role === GroupRole.ADMIN ? 'Rimuovi admin' : 'Rendi admin' }}"
+              >
+                {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+              </button>
+            }
+            @if (!canModifyMember(member) && !isCurrentUser(member.user.id)) {
+              <span class="role-badge" [class.admin]="member.role === GroupRole.ADMIN">
+                {{ member.role === GroupRole.ADMIN ? 'Admin' : 'Membro' }}
+              </span>
+            }
+            @if (canRemoveMember(member)) {
+              <button
+                type="button"
+                class="btn-remove"
+                (click)="onRemoveMember(member)"
+                title="Rimuovi"
+              >
+                <ng-icon name="lucideTrash2" size="16"></ng-icon>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (members.length === 0) {
+    <div class="no-members">
+      <p>Nessun membro ancora. Aggiungi il primo!</p>
+    </div>
+  }
+</div>

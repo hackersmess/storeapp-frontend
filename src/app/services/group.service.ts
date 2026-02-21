@@ -136,6 +136,7 @@ export class GroupService {
 
 	/**
 	 * Ottiene tutti gli utenti disponibili
+	 * @deprecated Usa searchUsers invece per evitare di scaricare tutti gli utenti
 	 */
 	getAllUsers(): Observable<User[]> {
 		return this.http.get<User[]>(this.usersApiUrl).pipe(
