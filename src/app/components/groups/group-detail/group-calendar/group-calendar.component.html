@@ -18,7 +18,8 @@
             type="button"
             title="Aggiungi attività"
           >
-            <ng-icon name="lucidePlus" size="16"></ng-icon>
+            <ng-icon name="lucidePlus" size="14"></ng-icon>
+            <span>Aggiungi</span>
           </button>
         </div>
 
@@ -28,18 +29,42 @@
           } @else {
             @for (activity of day.activities; track activity.id) {
               <div class="activity-item">
-                <div class="activity-info" (click)="onActivityClick(activity, $event)">
-                  <span class="activity-time">{{ formatTime(activity.start) }}</span>
-                  <span class="activity-title">{{ activity.title }}</span>
+                <div class="activity-main">
+                  <div class="activity-content" (click)="onActivityClick(activity, $event)">
+                    <div class="activity-title">{{ activity.title }}</div>
+                    <div class="activity-meta">
+                      <span class="activity-time">{{ formatTime(activity.start) }}</span>
+                      <span class="activity-separator">•</span>
+                      <span class="activity-time">{{ formatTime(activity.end) }}</span>
+                      @if (activity.locationName) {
+                        <span class="activity-separator">•</span>
+                        <span class="activity-location">
+                          <ng-icon name="lucideMapPin" size="12"></ng-icon>
+                          {{ activity.locationName }}
+                        </span>
+                      }
+                    </div>
+                  </div>
                 </div>
-                <button
-                  class="add-expense-btn"
-                  (click)="onAddExpense(activity.id, $event)"
-                  type="button"
-                  title="Aggiungi spesa"
-                >
-                  <ng-icon name="lucideDollarSign" size="14"></ng-icon>
-                </button>
+                <div class="activity-actions">
+                  <button
+                    class="add-expense-btn"
+                    (click)="onAddExpense(activity.id, $event)"
+                    type="button"
+                    title="Aggiungi spesa"
+                  >
+                    <ng-icon name="lucideDollarSign" size="12"></ng-icon>
+                    <span>Spesa</span>
+                  </button>
+                  <button
+                    class="delete-activity-btn"
+                    (click)="onDeleteActivity(activity.id, $event)"
+                    type="button"
+                    title="Elimina attività"
+                  >
+                    <ng-icon name="lucideTrash2" size="12"></ng-icon>
+                  </button>
+                </div>
               </div>
             }
           }

@@ -1,0 +1,37 @@
+.polls-container {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  max-width: 400px;
+
+  ng-icon {
+    color: var(--color-accent);
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .coming-soon {
+    font-style: italic;
+    color: var(--color-accent);
+    font-weight: 500;
+    margin-top: 1rem;
+  }
+}

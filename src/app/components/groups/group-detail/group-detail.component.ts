@@ -22,11 +22,11 @@ import {
 	lucideShield,
 	lucideChevronDown,
 	lucideChevronUp,
-	lucideList,
+	lucideBarChart3,
 	lucideMap
 } from '@ng-icons/lucide';
 import { GroupCalendarComponent } from './group-calendar/group-calendar.component';
-import { GroupActivitiesListComponent } from './group-activities-list/group-activities-list.component';
+import { GroupPollsComponent } from './group-polls/group-polls.component';
 import { ActivityModalComponent } from './activity-modal/activity-modal.component';
 import { ExpenseModalComponent } from './expense-modal/expense-modal.component';
 import { AddMemberModalComponent } from './add-member-modal/add-member-modal.component';
@@ -43,7 +43,7 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		ConfirmDialogComponent,
 		NgIconComponent,
 		GroupCalendarComponent,
-		GroupActivitiesListComponent,
+		GroupPollsComponent,
 		ActivityModalComponent,
 		ExpenseModalComponent,
 		AddMemberModalComponent,
@@ -61,7 +61,7 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		lucideShield,
 		lucideChevronDown,
 		lucideChevronUp,
-		lucideList,
+		lucideBarChart3,
 		lucideMap
 	})]
 })
@@ -78,6 +78,7 @@ export class GroupDetailComponent implements OnInit {
 	loading = signal(false);
 	error = signal<string | null>(null);
 	showDeleteConfirm = signal(false);
+	activityToDelete = signal<number | null>(null);
 
 	// Tabs for mobile-first layout
 	activeTab = signal<'calendar' | 'activities' | 'map' | 'members' | 'info'>('calendar');
@@ -481,6 +482,45 @@ export class GroupDetailComponent implements OnInit {
 				this.savingActivity.set(false);
 			}
 		});
+	}
+
+	onDeleteActivity(activityId: number) {
+		// Salva l'ID e mostra il dialog di conferma
+		this.activityToDelete.set(activityId);
+		this.showDeleteConfirm.set(true);
+	}
+
+	confirmDeleteActivity() {
+		const currentGroup = this.group();
+		const activityId = this.activityToDelete();
+
+		if (!currentGroup || !activityId) {
+			this.showDeleteConfirm.set(false);
+			return;
+		}
+
+		this.loading.set(true);
+
+		this.activityService.deleteActivity(currentGroup.id, activityId).subscribe({
+			next: () => {
+				this.loading.set(false);
+				this.showDeleteConfirm.set(false);
+				this.activityToDelete.set(null);
+				this.loadActivities(currentGroup.id);
+			},
+			error: (err) => {
+				console.error('Error deleting activity:', err);
+				this.error.set('Errore nell\'eliminazione dell\'attività');
+				this.loading.set(false);
+				this.showDeleteConfirm.set(false);
+				this.activityToDelete.set(null);
+			}
+		});
+	}
+
+	cancelDeleteActivity() {
+		this.showDeleteConfirm.set(false);
+		this.activityToDelete.set(null);
 	}
 
 	closeActivityModal() {

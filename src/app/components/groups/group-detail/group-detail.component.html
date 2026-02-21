@@ -64,12 +64,12 @@
         </button>
         <button
           class="tab-btn"
-          [class.active]="activeTab() === 'activities'"
-          (click)="setActiveTab('activities')"
+          [class.active]="activeTab() === 'polls'"
+          (click)="setActiveTab('polls')"
           type="button"
         >
-          <ng-icon name="lucideList" size="18"></ng-icon>
-          <span>Attività</span>
+          <ng-icon name="lucideBarChart3" size="18"></ng-icon>
+          <span>Sondaggi</span>
         </button>
         <button
           class="tab-btn"
@@ -97,6 +97,7 @@
                 (activityClick)="onActivityClick($event)"
                 (createActivity)="onAddActivity($event)"
                 (addExpense)="openExpenseModal($event)"
+                (deleteActivity)="onDeleteActivity($event)"
               >
               </app-group-calendar>
             } @else {
@@ -111,17 +112,10 @@
           </div>
         }
 
-        <!-- Activities List Tab -->
-        @if (activeTab() === 'activities') {
-          <div class="activities-full-section">
-            <app-group-activities-list
-              [activities]="activities()"
-              [selectedDate]="null"
-              [loading]="loadingActivities()"
-              (activityClick)="onActivityClick($event)"
-              (addActivity)="onAddActivity($event)"
-            >
-            </app-group-activities-list>
+        <!-- Polls Tab -->
+        @if (activeTab() === 'polls') {
+          <div class="polls-section">
+            <app-group-polls></app-group-polls>
           </div>
         }
 
@@ -270,6 +264,19 @@
       [loading]="confirmLoading()"
       (confirm)="confirmRemoveMember()"
       (cancel)="showRemoveMemberConfirm.set(false)"
+    >
+    </app-confirm-dialog>
+
+    <app-confirm-dialog
+      [show]="showDeleteConfirm() && activityToDelete() !== null"
+      title="Elimina Attività"
+      message="Sei sicuro di voler eliminare questa attività? Questa azione è irreversibile."
+      confirmText="Elimina"
+      cancelText="Annulla"
+      confirmButtonClass="btn-danger"
+      [loading]="confirmLoading()"
+      (confirm)="confirmDeleteActivity()"
+      (cancel)="cancelDeleteActivity()"
     >
     </app-confirm-dialog>
   }

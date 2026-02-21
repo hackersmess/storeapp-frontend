@@ -1,7 +1,7 @@
 import { Component, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucidePlus, lucideDollarSign } from '@ng-icons/lucide';
+import { lucidePlus, lucideDollarSign, lucideTrash2, lucideMapPin } from '@ng-icons/lucide';
 import { ActivityCalendar } from '../../../../models/activity.model';
 
 interface CalendarDay {
@@ -21,7 +21,9 @@ interface CalendarDay {
 	styleUrls: ['./group-calendar.component.scss'],
 	viewProviders: [provideIcons({
 		lucidePlus,
-		lucideDollarSign
+		lucideDollarSign,
+		lucideTrash2,
+		lucideMapPin
 	})]
 })
 export class GroupCalendarComponent {
@@ -36,6 +38,7 @@ export class GroupCalendarComponent {
 	activityClick = output<ActivityCalendar>();
 	createActivity = output<Date>();
 	addExpense = output<number>(); // activity ID
+	deleteActivity = output<number>(); // activity ID
 
 	// Internal signals
 	calendarDays = signal<CalendarDay[]>([]);
@@ -106,6 +109,11 @@ export class GroupCalendarComponent {
 	onAddExpense(activityId: number, event: Event): void {
 		event.stopPropagation();
 		this.addExpense.emit(activityId);
+	}
+
+	onDeleteActivity(activityId: number, event: Event): void {
+		event.stopPropagation();
+		this.deleteActivity.emit(activityId);
 	}
 
 	formatTime(dateString: string): string {
