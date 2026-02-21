@@ -149,9 +149,16 @@ export class GroupService {
 	/**
 	 * Ottiene gli utenti disponibili da aggiungere al gruppo
 	 * (esclude gli utenti già membri del gruppo)
+	 * @param groupId ID del gruppo
+	 * @param searchQuery Query di ricerca opzionale (cerca in email e nome)
 	 */
-	getAvailableUsers(groupId: number): Observable<User[]> {
-		return this.http.get<User[]>(`${this.apiUrl}/${groupId}/available-users`).pipe(
+	getAvailableUsers(groupId: number, searchQuery?: string): Observable<User[]> {
+		let params = new HttpParams();
+		if (searchQuery && searchQuery.trim().length > 0) {
+			params = params.set('search', searchQuery.trim());
+		}
+
+		return this.http.get<User[]>(`${this.apiUrl}/${groupId}/available-users`, { params }).pipe(
 			catchError(error => {
 				console.error('Error fetching available users:', error);
 				return of([]);

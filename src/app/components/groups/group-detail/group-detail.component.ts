@@ -98,7 +98,6 @@ export class GroupDetailComponent implements OnInit {
 	searchResults: User[] = [];
 	searching = false;
 	addingMember = false;
-	currentSearchQuery = '';
 
 	// Confirm dialogs
 	showRemoveMemberConfirm = signal(false);
@@ -143,15 +142,14 @@ export class GroupDetailComponent implements OnInit {
 						return [];
 					}
 					this.searching = true;
-					return this.groupService.getAvailableUsers(currentGroup.id);
+					// 🚀 Passa la query al backend per filtrare lato server
+					return this.groupService.getAvailableUsers(currentGroup.id, query);
 				})
 			)
 			.subscribe({
 				next: (users) => {
-					this.searchResults = users.filter(user =>
-						user.email.toLowerCase().includes(this.currentSearchQuery.toLowerCase()) ||
-						user.name.toLowerCase().includes(this.currentSearchQuery.toLowerCase())
-					);
+					// ✨ Gli utenti arrivano già filtrati dal backend
+					this.searchResults = users;
 					this.searching = false;
 				},
 				error: (err) => {
@@ -162,7 +160,6 @@ export class GroupDetailComponent implements OnInit {
 	}
 
 	onSearchChange(query: string) {
-		this.currentSearchQuery = query;
 		this.searchQuery$.next(query);
 	}
 
@@ -360,14 +357,12 @@ export class GroupDetailComponent implements OnInit {
 
 	openAddMemberModal() {
 		this.showAddMemberModal.set(true);
-		this.currentSearchQuery = '';
 		this.searchResults = [];
 	}
 
 	closeAddMemberModal() {
 		this.showAddMemberModal.set(false);
 		this.searchResults = [];
-		this.currentSearchQuery = '';
 	}
 
 	selectUserToAdd(user: User) {
