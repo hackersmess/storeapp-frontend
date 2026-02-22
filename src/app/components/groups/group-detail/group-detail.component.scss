@@ -1262,13 +1262,12 @@
 
 // ==================== GROUP ACTIONS ====================
 .group-actions {
-  max-width: 1200px;
-  margin: 3rem auto 2rem;
+  width: 100%;
+  margin: 3rem 0 0;
   padding: 2rem;
   background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 
   display: flex;
   flex-wrap: wrap;

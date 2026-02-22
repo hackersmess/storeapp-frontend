@@ -13,6 +13,32 @@
 
       <!-- Form -->
       <form [formGroup]="activityForm" (ngSubmit)="onSubmit()" class="modal-body">
+        <!-- Activity Type Selector (solo in create mode) -->
+        @if (!isEditMode()) {
+          <div class="activity-type-selector">
+            <button
+              type="button"
+              class="type-btn"
+              [class.active]="isEventType()"
+              (click)="onActivityTypeChange('EVENT')"
+            >
+              <ng-icon name="lucideMapPinned" size="20"></ng-icon>
+              <span>Evento</span>
+              <small>Ristorante, museo, hotel...</small>
+            </button>
+            <button
+              type="button"
+              class="type-btn"
+              [class.active]="isTripType()"
+              (click)="onActivityTypeChange('TRIP')"
+            >
+              <ng-icon name="lucidePlane" size="20"></ng-icon>
+              <span>Viaggio</span>
+              <small>Volo, treno, auto...</small>
+            </button>
+          </div>
+        }
+
         <!-- Nome attività -->
         <div class="form-group">
           <label class="form-label required">
@@ -23,8 +49,8 @@
             type="text"
             class="form-input"
             formControlName="name"
-            placeholder="Es: Visita al Colosseo"
-            maxlength="200"
+            [placeholder]="isEventType() ? 'Es: Cena al ristorante' : 'Es: Volo per Roma'"
+            maxlength="255"
             [class.error]="titleControl?.invalid && titleControl?.touched"
           />
           @if (titleControl?.invalid && titleControl?.touched) {
@@ -46,63 +72,347 @@
           ></textarea>
         </div>
 
-        <!-- Data -->
-        <div class="form-group">
-          <label class="form-label">
-            <ng-icon name="lucideCalendar" size="16"></ng-icon>
-            <span>Data</span>
-          </label>
-          <input type="date" class="form-input" formControlName="scheduledDate" readonly />
+        <!-- Date (start + end for multi-day) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">
+              <ng-icon name="lucideCalendar" size="16"></ng-icon>
+              <span>Data inizio</span>
+            </label>
+            <input type="date" class="form-input" formControlName="startDate" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">
+              <ng-icon name="lucideCalendar" size="16"></ng-icon>
+              <span>Data fine</span>
+            </label>
+            <input type="date" class="form-input" formControlName="endDate" required />
+          </div>
         </div>
 
         <!-- Orari -->
-        <div class="form-row">
+        @if (isEventType()) {
+          <!-- Event: Ora inizio/fine -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora inizio</span>
+              </label>
+              <input type="time" class="form-input" formControlName="startTime" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora fine</span>
+              </label>
+              <input type="time" class="form-input" formControlName="endTime" required />
+            </div>
+          </div>
+
+          <!-- Error message for date/time range -->
+          @if (hasDateTimeRangeError) {
+            <div class="error-message">
+              {{ dateTimeRangeErrorMessage }}
+            </div>
+          }
+        }
+        @if (isTripType()) {
+          <!-- Trip: Ora partenza/arrivo (obbligatori) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora partenza</span>
+              </label>
+              <input type="time" class="form-input" formControlName="departureTime" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora arrivo</span>
+              </label>
+              <input type="time" class="form-input" formControlName="arrivalTime" required />
+            </div>
+          </div>
+
+          <!-- Error message for date/time range -->
+          @if (hasDateTimeRangeError) {
+            <div class="error-message">
+              {{ dateTimeRangeErrorMessage }}
+            </div>
+          }
+        }
+
+        <!-- ========================================== -->
+        <!-- PARTICIPANTS SELECTION -->
+        <!-- ========================================== -->
+        <div class="form-section">
+          <div class="section-header">
+            <h4 class="section-title">
+              <ng-icon name="lucideUsers" size="16"></ng-icon>
+              <span>Partecipanti</span>
+            </h4>
+            @if (members().length > 0) {
+              <div class="section-actions">
+                <button
+                  type="button"
+                  class="btn-link"
+                  (click)="selectAllParticipants()"
+                  [disabled]="selectedParticipantIds().length === members().length"
+                >
+                  Tutti
+                </button>
+                <span class="separator">|</span>
+                <button
+                  type="button"
+                  class="btn-link"
+                  (click)="clearAllParticipants()"
+                  [disabled]="selectedParticipantIds().length === 0"
+                >
+                  Nessuno
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (members().length > 0) {
+            <div class="participants-list">
+              @for (member of members(); track member.id) {
+                <label class="participant-item">
+                  <input
+                    type="checkbox"
+                    [checked]="isParticipantSelected(member.id)"
+                    (change)="toggleParticipant(member.id)"
+                  />
+                  <img
+                    [src]="member.user.avatarUrl || '/assets/default-avatar.png'"
+                    [alt]="member.user.name"
+                    class="participant-avatar"
+                  />
+                  <span class="participant-name">{{ member.user.name }}</span>
+                </label>
+              }
+            </div>
+
+            @if (noParticipantsSelected()) {
+              <div class="warning-message">
+                ⚠️ Obbligatorio: seleziona almeno un partecipante per creare l'attività
+              </div>
+            }
+          } @else {
+            <div class="info-message">Nessun membro disponibile nel gruppo</div>
+          }
+        </div>
+
+        <!-- ========================================== -->
+        <!-- EVENT-SPECIFIC FIELDS -->
+        <!-- ========================================== -->
+        @if (isEventType()) {
+          <!-- Event Category -->
+          <div class="form-group">
+            <label class="form-label required">
+              <ng-icon name="lucideTag" size="16"></ng-icon>
+              <span>Categoria</span>
+            </label>
+            <select class="form-select" formControlName="category">
+              @for (cat of eventCategories; track cat) {
+                <option [value]="cat">{{ getEventCategoryLabel(cat) }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Event Location -->
           <div class="form-group">
             <label class="form-label">
-              <ng-icon name="lucideClock" size="16"></ng-icon>
-              <span>Ora inizio</span>
+              <ng-icon name="lucideMapPin" size="16"></ng-icon>
+              <span>Luogo</span>
             </label>
-            <input type="time" class="form-input" formControlName="startTime" />
+            <input
+              type="text"
+              class="form-input"
+              formControlName="locationName"
+              placeholder="Es: Colosseo"
+              maxlength="500"
+            />
           </div>
 
           <div class="form-group">
             <label class="form-label">
-              <ng-icon name="lucideClock" size="16"></ng-icon>
-              <span>Ora fine</span>
+              <ng-icon name="lucideMapPin" size="16"></ng-icon>
+              <span>Indirizzo</span>
             </label>
-            <input type="time" class="form-input" formControlName="endTime" />
+            <input
+              type="text"
+              class="form-input"
+              formControlName="locationAddress"
+              placeholder="Es: Piazza del Colosseo, Roma"
+              maxlength="500"
+            />
           </div>
-        </div>
 
-        <!-- Luogo -->
-        <div class="form-group">
-          <label class="form-label">
-            <ng-icon name="lucideMapPin" size="16"></ng-icon>
-            <span>Luogo</span>
-          </label>
-          <input
-            type="text"
-            class="form-input"
-            formControlName="locationName"
-            placeholder="Es: Colosseo"
-            maxlength="200"
-          />
-        </div>
+          <!-- Event Booking Info -->
+          <div class="form-group">
+            <label class="form-label">
+              <ng-icon name="lucideLink" size="16"></ng-icon>
+              <span>URL Prenotazione</span>
+            </label>
+            <input
+              type="url"
+              class="form-input"
+              formControlName="bookingUrl"
+              placeholder="https://..."
+              maxlength="1000"
+            />
+          </div>
 
-        <!-- Indirizzo -->
-        <div class="form-group">
-          <label class="form-label">
-            <ng-icon name="lucideMapPin" size="16"></ng-icon>
-            <span>Indirizzo</span>
-          </label>
-          <input
-            type="text"
-            class="form-input"
-            formControlName="locationAddress"
-            placeholder="Es: Piazza del Colosseo, Roma"
-            maxlength="500"
-          />
-        </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <ng-icon name="lucideTicket" size="16"></ng-icon>
+                <span>Codice Prenotazione</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                formControlName="bookingReference"
+                placeholder="ABC123"
+                maxlength="255"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora Prenotazione</span>
+              </label>
+              <input type="time" class="form-input" formControlName="reservationTime" />
+            </div>
+          </div>
+        }
+
+        <!-- ========================================== -->
+        <!-- TRIP-SPECIFIC FIELDS -->
+        <!-- ========================================== -->
+        @if (isTripType()) {
+          <!-- Transport Mode -->
+          <div class="form-group">
+            <label class="form-label required">
+              <ng-icon name="lucidePlane" size="16"></ng-icon>
+              <span>Mezzo di trasporto</span>
+            </label>
+            <select class="form-select" formControlName="transportMode">
+              @for (mode of transportModes; track mode) {
+                <option [value]="mode">{{ getTransportModeLabel(mode) }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Trip Times (required) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora partenza</span>
+              </label>
+              <input type="time" class="form-input" formControlName="departureTime" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideClock" size="16"></ng-icon>
+                <span>Ora arrivo</span>
+              </label>
+              <input type="time" class="form-input" formControlName="arrivalTime" required />
+            </div>
+          </div>
+
+          <!-- Origin -->
+          <div class="form-section">
+            <h4 class="section-title">
+              <ng-icon name="lucideMapPin" size="16"></ng-icon>
+              Partenza
+            </h4>
+
+            <div class="form-group">
+              <label class="form-label">
+                <span>Luogo di partenza</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                formControlName="originName"
+                placeholder="Es: Aeroporto Fiumicino"
+                maxlength="500"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <span>Indirizzo partenza</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                formControlName="originAddress"
+                placeholder="Es: Via dell'Aeroporto di Fiumicino, Roma"
+                maxlength="500"
+              />
+            </div>
+          </div>
+
+          <!-- Destination -->
+          <div class="form-section">
+            <h4 class="section-title">
+              <ng-icon name="lucideFlag" size="16"></ng-icon>
+              Destinazione
+            </h4>
+
+            <div class="form-group">
+              <label class="form-label">
+                <span>Luogo di arrivo</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                formControlName="destinationName"
+                placeholder="Es: Aeroporto JFK"
+                maxlength="500"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <span>Indirizzo arrivo</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                formControlName="destinationAddress"
+                placeholder="Es: Queens, NY, USA"
+                maxlength="500"
+              />
+            </div>
+          </div>
+
+          <!-- Trip Booking Info -->
+          <div class="form-group">
+            <label class="form-label">
+              <ng-icon name="lucideTicket" size="16"></ng-icon>
+              <span>Codice Prenotazione</span>
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="bookingReference"
+              placeholder="PNR: ABC123"
+              maxlength="255"
+            />
+          </div>
+        }
 
         <!-- Gestione spese (solo in modalità edit) -->
         @if (isEditMode()) {

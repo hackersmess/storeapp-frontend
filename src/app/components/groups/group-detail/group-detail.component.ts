@@ -6,7 +6,7 @@ import { GroupService } from '../../../services/group.service';
 import { Group, GroupMember, GroupRole, AddMemberRequest, LeaveGroupStatus } from '../../../models/group.model';
 import { User } from '../../../models/user.model';
 import { ActivityService } from '../../../services/activity.service';
-import { ActivityCalendar, ActivityRequest, Activity } from '../../../models/activity.model';
+import { ActivityCalendar, ActivityRequest, Activity, EventRequest, TripRequest, isEvent, isTrip } from '../../../models/activity.model';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
@@ -448,26 +448,66 @@ export class GroupDetailComponent implements OnInit {
 		// Carica i dettagli completi dell'attività
 		this.activityService.getActivity(currentGroup.id, activity.id).subscribe({
 			next: (fullActivity) => {
-				this.activityToEdit.set(fullActivity);
-				this.showActivityModal.set(true);
+				// Carica anche i partecipanti separatamente
+				this.activityService.getParticipants(currentGroup.id, activity.id).subscribe({
+					next: (participants) => {
+						// Aggiungi i partecipanti all'activity
+						fullActivity.participants = participants;
+						this.activityToEdit.set(fullActivity);
+						this.showActivityModal.set(true);
+					},
+					error: (err) => {
+						console.error('Error loading participants:', err);
+						// Anche se i partecipanti non caricano, mostra il modal
+						this.activityToEdit.set(fullActivity);
+						this.showActivityModal.set(true);
+					}
+				});
 			},
 			error: (err) => {
 				console.error('Error loading activity details:', err);
 				this.error.set('Errore nel caricamento dei dettagli');
 			}
 		});
-	}
-
-	onSaveActivity(request: ActivityRequest) {
+	} onSaveActivity(request: EventRequest | TripRequest) {
 		const currentGroup = this.group();
 		if (!currentGroup) return;
 
 		const activityToEdit = this.activityToEdit();
 		this.savingActivity.set(true);
 
-		const operation = activityToEdit
-			? this.activityService.updateActivity(currentGroup.id, activityToEdit.id, request)
-			: this.activityService.createActivity(currentGroup.id, request);
+		let operation;
+
+		// Determina se è un Event o un Trip in base al tipo di request
+		const isEventRequest = 'category' in request;
+		const isTripRequest = 'transportMode' in request;
+
+		if (activityToEdit) {
+			// UPDATE: usa il metodo specifico in base al tipo di attività esistente
+			if (isEvent(activityToEdit) && isEventRequest) {
+				operation = this.activityService.updateEvent(currentGroup.id, activityToEdit.id, request as EventRequest);
+			} else if (isTrip(activityToEdit) && isTripRequest) {
+				operation = this.activityService.updateTrip(currentGroup.id, activityToEdit.id, request as TripRequest);
+			} else {
+				// Tipo non corrispondente - errore
+				console.error('Activity type mismatch: cannot change type during update');
+				this.error.set('Errore: impossibile cambiare il tipo di attività durante la modifica');
+				this.savingActivity.set(false);
+				return;
+			}
+		} else {
+			// CREATE: usa il metodo specifico in base al tipo di request
+			if (isEventRequest) {
+				operation = this.activityService.createEvent(currentGroup.id, request as EventRequest);
+			} else if (isTripRequest) {
+				operation = this.activityService.createTrip(currentGroup.id, request as TripRequest);
+			} else {
+				console.error('Unknown activity type in request');
+				this.error.set('Errore: tipo di attività non riconosciuto');
+				this.savingActivity.set(false);
+				return;
+			}
+		}
 
 		operation.subscribe({
 			next: () => {

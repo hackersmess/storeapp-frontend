@@ -4,6 +4,10 @@ import { Observable } from 'rxjs';
 import {
 	Activity,
 	ActivityRequest,
+	EventRequest,
+	TripRequest,
+	Event,
+	Trip,
 	ActivityCalendar,
 	ActivityParticipant,
 	ActivityParticipantRequest,
@@ -38,7 +42,36 @@ export class ActivityService {
 	}
 
 	/**
+	 * Crea un nuovo Event
+	 */
+	createEvent(groupId: number, request: EventRequest): Observable<Event> {
+		return this.http.post<Event>(`${this.apiUrl}/groups/${groupId}/activities/events`, request);
+	}
+
+	/**
+	 * Crea un nuovo Trip
+	 */
+	createTrip(groupId: number, request: TripRequest): Observable<Trip> {
+		return this.http.post<Trip>(`${this.apiUrl}/groups/${groupId}/activities/trips`, request);
+	}
+
+	/**
+	 * Aggiorna un Event esistente
+	 */
+	updateEvent(groupId: number, activityId: number, request: EventRequest): Observable<Event> {
+		return this.http.put<Event>(`${this.apiUrl}/groups/${groupId}/activities/events/${activityId}`, request);
+	}
+
+	/**
+	 * Aggiorna un Trip esistente
+	 */
+	updateTrip(groupId: number, activityId: number, request: TripRequest): Observable<Trip> {
+		return this.http.put<Trip>(`${this.apiUrl}/groups/${groupId}/activities/trips/${activityId}`, request);
+	}
+
+	/**
 	 * Crea una nuova attività nel gruppo
+	 * @deprecated Usa createEvent() o createTrip() invece
 	 */
 	createActivity(groupId: number, request: ActivityRequest): Observable<Activity> {
 		return this.http.post<Activity>(`${this.apiUrl}/groups/${groupId}/activities`, request);
@@ -46,6 +79,7 @@ export class ActivityService {
 
 	/**
 	 * Aggiorna un'attività esistente
+	 * @deprecated Usa updateEvent() o updateTrip() invece
 	 */
 	updateActivity(groupId: number, activityId: number, request: ActivityRequest): Observable<Activity> {
 		return this.http.put<Activity>(`${this.apiUrl}/groups/${groupId}/activities/${activityId}`, request);

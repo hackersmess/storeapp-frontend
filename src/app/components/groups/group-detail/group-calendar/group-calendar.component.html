@@ -30,7 +30,7 @@
             @for (activity of day.activities; track activity.id) {
               <div class="activity-item">
                 <div class="activity-main">
-                  <div class="activity-content" (click)="onActivityClick(activity, $event)">
+                  <div class="activity-content">
                     <div class="activity-title">{{ activity.title }}</div>
                     <div class="activity-meta">
                       <span class="activity-time">{{ formatTime(activity.start) }}</span>
@@ -47,6 +47,15 @@
                   </div>
                 </div>
                 <div class="activity-actions">
+                  <button
+                    class="edit-activity-btn"
+                    (click)="onActivityClick(activity, $event)"
+                    type="button"
+                    title="Modifica attività"
+                  >
+                    <ng-icon name="lucidePencil" size="12"></ng-icon>
+                    <span>Modifica</span>
+                  </button>
                   <button
                     class="add-expense-btn"
                     (click)="onAddExpense(activity.id, $event)"

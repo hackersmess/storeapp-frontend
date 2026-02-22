@@ -1,7 +1,7 @@
 import { Component, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucidePlus, lucideDollarSign, lucideTrash2, lucideMapPin } from '@ng-icons/lucide';
+import { lucidePlus, lucideDollarSign, lucideTrash2, lucideMapPin, lucidePencil } from '@ng-icons/lucide';
 import { ActivityCalendar } from '../../../../models/activity.model';
 
 interface CalendarDay {
@@ -23,7 +23,8 @@ interface CalendarDay {
 		lucidePlus,
 		lucideDollarSign,
 		lucideTrash2,
-		lucideMapPin
+		lucideMapPin,
+		lucidePencil
 	})]
 })
 export class GroupCalendarComponent {
