@@ -89,6 +89,7 @@ export interface Event extends BaseActivity {
 	bookingUrl?: string;
 	bookingReference?: string;
 	reservationTime?: string; // HH:mm format
+	timezone?: string;        // IANA timezone ID (e.g. "Europe/Rome")
 }
 
 /**
@@ -99,10 +100,12 @@ export interface Trip extends BaseActivity {
 	origin?: Location;
 	destination?: Location;
 	transportMode: TransportMode;
-	departureDate: string;  // ISO date string (YYYY-MM-DD) - replaces startDate
-	arrivalDate?: string;   // ISO date string (YYYY-MM-DD) - replaces endDate
-	departureTime?: string; // HH:mm format - replaces startTime
-	arrivalTime?: string;   // HH:mm format - replaces endTime
+	departureDate: string;      // ISO date string (YYYY-MM-DD) - replaces startDate
+	arrivalDate?: string;       // ISO date string (YYYY-MM-DD) - replaces endDate
+	departureTime?: string;     // HH:mm format - replaces startTime
+	arrivalTime?: string;       // HH:mm format - replaces endTime
+	departureTimezone?: string; // IANA timezone ID of departure location (e.g. "Europe/Rome")
+	arrivalTimezone?: string;   // IANA timezone ID of arrival location (may differ, e.g. "America/New_York")
 	bookingReference?: string;
 }
 
@@ -138,6 +141,7 @@ export interface EventRequest {
 	endDate?: string;
 	startTime?: string;
 	endTime?: string;
+	timezone?: string; // IANA timezone ID (default: "Europe/Rome")
 	locationName?: string;
 	locationAddress?: string;
 	locationLatitude?: number;
@@ -164,6 +168,8 @@ export interface TripRequest {
 	arrivalDate?: string;
 	departureTime?: string;
 	arrivalTime?: string;
+	departureTimezone?: string; // IANA timezone ID of departure location (default: "Europe/Rome")
+	arrivalTimezone?: string;   // IANA timezone ID of arrival location (default: "Europe/Rome")
 	originName?: string;
 	originAddress?: string;
 	originLatitude?: number;

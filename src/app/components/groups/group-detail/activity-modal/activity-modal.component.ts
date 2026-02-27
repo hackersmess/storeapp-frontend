@@ -18,7 +18,8 @@ import {
 	lucideUsers,
 	lucideFlag,
 	lucideArmchair,
-	lucideRuler
+	lucideRuler,
+	lucideGlobe
 } from '@ng-icons/lucide';
 import { Activity, EventRequest, TripRequest, ActivityType, EventCategory, TransportMode, isEvent, isTrip, getEventCategoryLabel, getTransportModeLabel } from '../../../../models/activity.model';
 import { GroupMember } from '../../../../models/group.model';
@@ -46,7 +47,8 @@ import { eventDateTimeValidator, tripDateTimeValidator } from '../../../../share
 		lucideUsers,
 		lucideFlag,
 		lucideArmchair,
-		lucideRuler
+		lucideRuler,
+		lucideGlobe
 	})]
 })
 export class ActivityModalComponent {
@@ -85,6 +87,61 @@ export class ActivityModalComponent {
 	// Helper functions for template
 	readonly getEventCategoryLabel = getEventCategoryLabel;
 	readonly getTransportModeLabel = getTransportModeLabel;
+
+	// Common timezones grouped by area (IANA IDs)
+	readonly timezones: { group: string; zones: { id: string; label: string }[] }[] = [
+		{
+			group: 'Europa',
+			zones: [
+				{ id: 'Europe/Rome', label: 'Roma / Milano (CET)' },
+				{ id: 'Europe/London', label: 'Londra (GMT/BST)' },
+				{ id: 'Europe/Paris', label: 'Parigi (CET)' },
+				{ id: 'Europe/Berlin', label: 'Berlino (CET)' },
+				{ id: 'Europe/Madrid', label: 'Madrid (CET)' },
+				{ id: 'Europe/Athens', label: 'Atene (EET)' },
+				{ id: 'Europe/Moscow', label: 'Mosca (MSK)' },
+			]
+		},
+		{
+			group: 'Americhe',
+			zones: [
+				{ id: 'America/New_York', label: 'New York (ET)' },
+				{ id: 'America/Chicago', label: 'Chicago (CT)' },
+				{ id: 'America/Denver', label: 'Denver (MT)' },
+				{ id: 'America/Los_Angeles', label: 'Los Angeles (PT)' },
+				{ id: 'America/Sao_Paulo', label: 'São Paulo (BRT)' },
+				{ id: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)' },
+				{ id: 'America/Mexico_City', label: 'Città del Messico (CT)' },
+			]
+		},
+		{
+			group: 'Asia / Pacifico',
+			zones: [
+				{ id: 'Asia/Dubai', label: 'Dubai (GST)' },
+				{ id: 'Asia/Kolkata', label: 'Mumbai / Delhi (IST)' },
+				{ id: 'Asia/Bangkok', label: 'Bangkok (ICT)' },
+				{ id: 'Asia/Shanghai', label: 'Pechino / Shanghai (CST)' },
+				{ id: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+				{ id: 'Asia/Seoul', label: 'Seoul (KST)' },
+				{ id: 'Australia/Sydney', label: 'Sydney (AEDT)' },
+			]
+		},
+		{
+			group: 'Africa / Medio Oriente',
+			zones: [
+				{ id: 'Africa/Cairo', label: 'Cairo (EET)' },
+				{ id: 'Africa/Johannesburg', label: 'Johannesburg (SAST)' },
+				{ id: 'Africa/Nairobi', label: 'Nairobi (EAT)' },
+				{ id: 'Asia/Jerusalem', label: 'Tel Aviv (IST)' },
+			]
+		},
+		{
+			group: 'UTC',
+			zones: [
+				{ id: 'UTC', label: 'UTC (Coordinato Universale)' },
+			]
+		}
+	];
 
 	constructor() {
 		// Effect per gestire l'activity in edit mode
@@ -157,6 +214,7 @@ export class ActivityModalComponent {
 				endDate: [''],
 				startTime: [''],
 				endTime: [''],
+				timezone: ['Europe/Rome'],
 				category: [EventCategory.OTHER, Validators.required],
 				locationName: ['', Validators.maxLength(500)],
 				locationAddress: ['', Validators.maxLength(500)],
@@ -173,6 +231,8 @@ export class ActivityModalComponent {
 				arrivalDate: [''],
 				departureTime: [''],
 				arrivalTime: [''],
+				departureTimezone: ['Europe/Rome'],
+				arrivalTimezone: ['Europe/Rome'],
 				transportMode: [TransportMode.OTHER, Validators.required],
 				originName: ['', Validators.maxLength(500)],
 				originAddress: ['', Validators.maxLength(500)],
@@ -204,6 +264,7 @@ export class ActivityModalComponent {
 				endDate: activity.endDate || '',
 				startTime: activity.startTime || '',
 				endTime: activity.endTime || '',
+				timezone: activity.timezone || 'Europe/Rome',
 				category: activity.category,
 				locationName: activity.location?.name || '',
 				locationAddress: activity.location?.address || '',
@@ -230,6 +291,8 @@ export class ActivityModalComponent {
 				arrivalDate: arrDate,
 				departureTime: depTime,
 				arrivalTime: arrTime,
+				departureTimezone: activity.departureTimezone || 'Europe/Rome',
+				arrivalTimezone: activity.arrivalTimezone || 'Europe/Rome',
 				transportMode: activity.transportMode,
 				originName: activity.origin?.name || '',
 				originAddress: activity.origin?.address || '',
@@ -311,6 +374,7 @@ export class ActivityModalComponent {
 				endDate: formValue.endDate || undefined,
 				startTime: formValue.startTime || undefined,
 				endTime: formValue.endTime || undefined,
+				timezone: formValue.timezone || 'Europe/Rome',
 				category: formValue.category,
 				locationName: formValue.locationName || undefined,
 				locationAddress: formValue.locationAddress || undefined,
@@ -330,6 +394,8 @@ export class ActivityModalComponent {
 				arrivalDate: formValue.arrivalDate || undefined,
 				departureTime: formValue.departureTime || undefined,
 				arrivalTime: formValue.arrivalTime || undefined,
+				departureTimezone: formValue.departureTimezone || 'Europe/Rome',
+				arrivalTimezone: formValue.arrivalTimezone || 'Europe/Rome',
 				transportMode: formValue.transportMode,
 				originName: formValue.originName || undefined,
 				originAddress: formValue.originAddress || undefined,
