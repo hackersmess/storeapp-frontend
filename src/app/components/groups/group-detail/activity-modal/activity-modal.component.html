@@ -72,28 +72,24 @@
           ></textarea>
         </div>
 
-        <!-- Date (start + end for multi-day) -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label required">
-              <ng-icon name="lucideCalendar" size="16"></ng-icon>
-              <span>Data inizio</span>
-            </label>
-            <input type="date" class="form-input" formControlName="startDate" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label required">
-              <ng-icon name="lucideCalendar" size="16"></ng-icon>
-              <span>Data fine</span>
-            </label>
-            <input type="date" class="form-input" formControlName="endDate" required />
-          </div>
-        </div>
-
-        <!-- Orari -->
+        <!-- Date e orari: sezioni separate per Evento e Viaggio -->
         @if (isEventType()) {
-          <!-- Event: Ora inizio/fine -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideCalendar" size="16"></ng-icon>
+                <span>Data inizio</span>
+              </label>
+              <input type="date" class="form-input" formControlName="startDate" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideCalendar" size="16"></ng-icon>
+                <span>Data fine</span>
+              </label>
+              <input type="date" class="form-input" formControlName="endDate" required />
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">
@@ -102,7 +98,6 @@
               </label>
               <input type="time" class="form-input" formControlName="startTime" required />
             </div>
-
             <div class="form-group">
               <label class="form-label required">
                 <ng-icon name="lucideClock" size="16"></ng-icon>
@@ -111,16 +106,34 @@
               <input type="time" class="form-input" formControlName="endTime" required />
             </div>
           </div>
-
-          <!-- Error message for date/time range -->
           @if (hasDateTimeRangeError) {
-            <div class="error-message">
-              {{ dateTimeRangeErrorMessage }}
-            </div>
+            <div class="error-message">{{ dateTimeRangeErrorMessage }}</div>
           }
         }
         @if (isTripType()) {
-          <!-- Trip: Ora partenza/arrivo (obbligatori) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideCalendar" size="16"></ng-icon>
+                <span>Data partenza</span>
+              </label>
+              <input
+                type="date"
+                class="form-input"
+                formControlName="departureDate"
+                required
+                [readOnly]="!!prefilledDate()"
+                [class.readonly]="!!prefilledDate()"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">
+                <ng-icon name="lucideCalendar" size="16"></ng-icon>
+                <span>Data arrivo</span>
+              </label>
+              <input type="date" class="form-input" formControlName="arrivalDate" required />
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">
@@ -129,7 +142,6 @@
               </label>
               <input type="time" class="form-input" formControlName="departureTime" required />
             </div>
-
             <div class="form-group">
               <label class="form-label required">
                 <ng-icon name="lucideClock" size="16"></ng-icon>
@@ -138,12 +150,8 @@
               <input type="time" class="form-input" formControlName="arrivalTime" required />
             </div>
           </div>
-
-          <!-- Error message for date/time range -->
           @if (hasDateTimeRangeError) {
-            <div class="error-message">
-              {{ dateTimeRangeErrorMessage }}
-            </div>
+            <div class="error-message">{{ dateTimeRangeErrorMessage }}</div>
           }
         }
 
@@ -199,9 +207,7 @@
             </div>
 
             @if (noParticipantsSelected()) {
-              <div class="warning-message">
-                ⚠️ Obbligatorio: seleziona almeno un partecipante per creare l'attività
-              </div>
+              <div class="warning-message">⚠️ Obbligatorio: seleziona almeno un partecipante</div>
             }
           } @else {
             <div class="info-message">Nessun membro disponibile nel gruppo</div>
@@ -309,25 +315,6 @@
                 <option [value]="mode">{{ getTransportModeLabel(mode) }}</option>
               }
             </select>
-          </div>
-
-          <!-- Trip Times (required) -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label required">
-                <ng-icon name="lucideClock" size="16"></ng-icon>
-                <span>Ora partenza</span>
-              </label>
-              <input type="time" class="form-input" formControlName="departureTime" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label required">
-                <ng-icon name="lucideClock" size="16"></ng-icon>
-                <span>Ora arrivo</span>
-              </label>
-              <input type="time" class="form-input" formControlName="arrivalTime" required />
-            </div>
           </div>
 
           <!-- Origin -->

@@ -273,7 +273,7 @@
           <!-- Members list -->
           <app-members-list
             [members]="getGroupMembers()"
-            [isAdmin]="true"
+            [isAdmin]="isCurrentUserAdmin()"
             [showAddButton]="false"
             [title]="'Membri Attuali'"
             [description]="''"

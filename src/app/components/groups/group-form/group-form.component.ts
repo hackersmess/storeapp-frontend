@@ -83,11 +83,10 @@ export class GroupFormComponent implements OnInit {
 						return [];
 					}
 					this.searching.set(true);
-					
+
 					// Se in modalità edit, usa getAvailableUsers con la query per escludere i membri già presenti
 					// Altrimenti usa searchUsers per la creazione iniziale
 					if (this.isEditMode() && this.groupId) {
-						// 🚀 Modalità edit: Backend filtra per query ed esclude i membri del gruppo
 						return this.groupService.getAvailableUsers(this.groupId, query);
 					} else {
 						// 🚀 Modalità creazione: Backend filtra solo per query (nessun gruppo da escludere)
@@ -171,7 +170,7 @@ export class GroupFormComponent implements OnInit {
 				this.selectedMembers.push({ user, role: GroupRole.MEMBER });
 			}
 		}
-		
+
 		this.groupForm.patchValue({ memberSearch: '' });
 		this.searchResults.set([]);
 		this.showSearchResults.set(false);
@@ -210,7 +209,7 @@ export class GroupFormComponent implements OnInit {
 				// Trova l'ID del membro nel gruppo (non l'ID dell'utente!)
 				const currentGroup = this.selectedMembers;
 				const memberIndex = currentGroup.findIndex(m => m.user.id === userId);
-				
+
 				// Dobbiamo trovare il memberId dal gruppo caricato
 				this.removeMemberFromGroupDB(userId);
 			}
@@ -231,7 +230,7 @@ export class GroupFormComponent implements OnInit {
 		if (!member) return;
 
 		this.loading.set(true);
-		
+
 		// Usa l'userId come memberId (in realtà dovremmo avere il GroupMember.id)
 		// Per ora usiamo l'userId perché selectedMembers non ha il memberId
 		this.groupService.removeMember(this.groupId, userId).subscribe({
@@ -254,7 +253,15 @@ export class GroupFormComponent implements OnInit {
 		// In modalità edit, aggiorna il ruolo nel database
 		if (this.isEditMode() && this.groupId) {
 			const newRole = member.role === GroupRole.ADMIN ? GroupRole.MEMBER : GroupRole.ADMIN;
-			this.updateMemberRoleInDB(userId, newRole);
+			// Trova il GroupMember completo per ottenere il memberId
+			this.groupService.getGroup(this.groupId).subscribe({
+				next: (group) => {
+					const groupMember = group.members.find(m => m.user.id === userId);
+					if (groupMember) {
+						this.updateMemberRoleInDB(groupMember.id, newRole);
+					}
+				}
+			});
 		} else {
 			// In modalità creazione, aggiorna solo localmente
 			member.role = member.role === GroupRole.ADMIN ? GroupRole.MEMBER : GroupRole.ADMIN;
@@ -263,13 +270,15 @@ export class GroupFormComponent implements OnInit {
 
 	/**
 	 * Aggiorna il ruolo di un membro nel database (solo in modalità edit)
+	 * @param memberId ID del GroupMember (NON userId!)
+	 * @param newRole Nuovo ruolo da assegnare
 	 */
-	private updateMemberRoleInDB(userId: number, newRole: GroupRole) {
+	private updateMemberRoleInDB(memberId: number, newRole: GroupRole) {
 		if (!this.groupId) return;
 
 		this.loading.set(true);
 
-		this.groupService.updateMemberRole(this.groupId, userId, { role: newRole }).subscribe({
+		this.groupService.updateMemberRole(this.groupId, memberId, { role: newRole }).subscribe({
 			next: () => {
 				// Ricarica il gruppo per avere i dati aggiornati
 				this.loadGroup();
@@ -394,5 +403,19 @@ export class GroupFormComponent implements OnInit {
 
 	toggleMemberRole(member: GroupMember) {
 		this.toggleRole(member.user.id);
+	}
+
+	/**
+	 * Verifica se l'utente corrente è admin del gruppo
+	 * CRITICO PER SICUREZZA: Controlla i permessi prima di mostrare pulsanti di modifica
+	 */
+	isCurrentUserAdmin(): boolean {
+		// In modalità creazione, il creatore è sempre admin
+		if (!this.isEditMode()) {
+			return true;
+		}
+
+		// In modalità edit, verifica il ruolo effettivo
+		return this.currentUserRole === GroupRole.ADMIN;
 	}
 }

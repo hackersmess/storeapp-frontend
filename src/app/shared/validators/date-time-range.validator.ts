@@ -43,10 +43,10 @@ export function dateTimeRangeValidator(
 }
 
 /**
- * Validator specifico per Trip con departureTime e arrivalTime
+ * Validator specifico per Trip con departureDate/departureTime e arrivalDate/arrivalTime
  */
 export function tripDateTimeValidator(): ValidatorFn {
-	return dateTimeRangeValidator('startDate', 'departureTime', 'endDate', 'arrivalTime');
+	return dateTimeRangeValidator('departureDate', 'departureTime', 'arrivalDate', 'arrivalTime');
 }
 
 /**

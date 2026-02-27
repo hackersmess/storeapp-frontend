@@ -131,9 +131,12 @@ export class ActivityModalComponent {
 		effect(() => {
 			const date = this.prefilledDate();
 			if (date && !this.activity() && this.activityForm) {
-				this.activityForm.patchValue({
-					startDate: this.formatDateForInput(date)
-				});
+				const formatted = this.formatDateForInput(date);
+				if (this.selectedActivityType() === 'TRIP') {
+					this.activityForm.patchValue({ departureDate: formatted });
+				} else {
+					this.activityForm.patchValue({ startDate: formatted });
+				}
 			}
 		});
 	}
@@ -141,20 +144,19 @@ export class ActivityModalComponent {
 	initForm() {
 		const type = this.selectedActivityType();
 
-		// Common fields for both types
+		// Common fields for both types (senza date/time: ogni tipo ha i propri)
 		const commonFields = {
 			name: ['', [Validators.required, Validators.maxLength(255)]],
-			description: [''],
-			startDate: ['', Validators.required],
-			endDate: ['', Validators.required],
-			startTime: ['', Validators.required],
-			endTime: ['', Validators.required]
+			description: ['']
 		};
 
 		if (type === 'EVENT') {
-			// Event-specific fields
 			this.activityForm = this.fb.group({
 				...commonFields,
+				startDate: ['', Validators.required],
+				endDate: [''],
+				startTime: [''],
+				endTime: [''],
 				category: [EventCategory.OTHER, Validators.required],
 				locationName: ['', Validators.maxLength(500)],
 				locationAddress: ['', Validators.maxLength(500)],
@@ -165,9 +167,12 @@ export class ActivityModalComponent {
 				reservationTime: ['']
 			}, { validators: eventDateTimeValidator() });
 		} else {
-			// Trip-specific fields
 			this.activityForm = this.fb.group({
 				...commonFields,
+				departureDate: ['', Validators.required],
+				arrivalDate: [''],
+				departureTime: [''],
+				arrivalTime: [''],
 				transportMode: [TransportMode.OTHER, Validators.required],
 				originName: ['', Validators.maxLength(500)],
 				originAddress: ['', Validators.maxLength(500)],
@@ -177,8 +182,6 @@ export class ActivityModalComponent {
 				destinationAddress: ['', Validators.maxLength(500)],
 				destinationLatitude: [null],
 				destinationLongitude: [null],
-				departureTime: ['', Validators.required],
-				arrivalTime: ['', Validators.required],
 				bookingReference: ['', Validators.maxLength(255)]
 			}, { validators: tripDateTimeValidator() });
 		}
@@ -213,13 +216,20 @@ export class ActivityModalComponent {
 
 			this.activityForm.patchValue(formData);
 		} else if (isTrip(activity)) {
+			// Supporto compatibilità: il backend può mandare departureDate (nuovo) o startDate (vecchio)
+			const anyActivity = activity as any;
+			const depDate = activity.departureDate || anyActivity.startDate || '';
+			const arrDate = activity.arrivalDate || anyActivity.endDate || '';
+			const depTime = activity.departureTime || anyActivity.startTime || '';
+			const arrTime = activity.arrivalTime || anyActivity.endTime || '';
+
 			this.activityForm.patchValue({
 				name: activity.name,
 				description: activity.description || '',
-				startDate: activity.startDate || '',
-				endDate: activity.endDate || '',
-				departureTime: activity.departureTime || '',
-				arrivalTime: activity.arrivalTime || '',
+				departureDate: depDate,
+				arrivalDate: arrDate,
+				departureTime: depTime,
+				arrivalTime: arrTime,
 				transportMode: activity.transportMode,
 				originName: activity.origin?.name || '',
 				originAddress: activity.origin?.address || '',
@@ -238,9 +248,12 @@ export class ActivityModalComponent {
 		this.activityForm.reset();
 		const date = this.prefilledDate();
 		if (date) {
-			this.activityForm.patchValue({
-				startDate: this.formatDateForInput(date)
-			});
+			const formatted = this.formatDateForInput(date);
+			if (this.selectedActivityType() === 'TRIP') {
+				this.activityForm.patchValue({ departureDate: formatted });
+			} else {
+				this.activityForm.patchValue({ startDate: formatted });
+			}
 		}
 		// Set default values
 		if (this.selectedActivityType() === 'EVENT') {
@@ -260,9 +273,12 @@ export class ActivityModalComponent {
 			// Ripristina la data precompilata se presente
 			const date = this.prefilledDate();
 			if (date) {
-				this.activityForm.patchValue({
-					startDate: this.formatDateForInput(date)
-				});
+				const formatted = this.formatDateForInput(date);
+				if (type === 'TRIP') {
+					this.activityForm.patchValue({ departureDate: formatted });
+				} else {
+					this.activityForm.patchValue({ startDate: formatted });
+				}
 			}
 		}
 	}
@@ -310,10 +326,10 @@ export class ActivityModalComponent {
 			const request: TripRequest = {
 				name: formValue.name,
 				description: formValue.description || undefined,
-				startDate: formValue.startDate,
-				endDate: formValue.endDate || undefined,
-				startTime: formValue.startTime || undefined,
-				endTime: formValue.endTime || undefined,
+				departureDate: formValue.departureDate,
+				arrivalDate: formValue.arrivalDate || undefined,
+				departureTime: formValue.departureTime || undefined,
+				arrivalTime: formValue.arrivalTime || undefined,
 				transportMode: formValue.transportMode,
 				originName: formValue.originName || undefined,
 				originAddress: formValue.originAddress || undefined,
@@ -323,8 +339,6 @@ export class ActivityModalComponent {
 				destinationAddress: formValue.destinationAddress || undefined,
 				destinationLatitude: formValue.destinationLatitude || undefined,
 				destinationLongitude: formValue.destinationLongitude || undefined,
-				departureTime: formValue.departureTime || undefined,
-				arrivalTime: formValue.arrivalTime || undefined,
 				bookingReference: formValue.bookingReference || undefined,
 				participantIds: this.selectedParticipantIds().length > 0 ? this.selectedParticipantIds() : undefined
 			};

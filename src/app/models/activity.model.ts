@@ -99,8 +99,10 @@ export interface Trip extends BaseActivity {
 	origin?: Location;
 	destination?: Location;
 	transportMode: TransportMode;
-	departureTime?: string; // HH:mm format
-	arrivalTime?: string;   // HH:mm format
+	departureDate: string;  // ISO date string (YYYY-MM-DD) - replaces startDate
+	arrivalDate?: string;   // ISO date string (YYYY-MM-DD) - replaces endDate
+	departureTime?: string; // HH:mm format - replaces startTime
+	arrivalTime?: string;   // HH:mm format - replaces endTime
 	bookingReference?: string;
 }
 
@@ -158,10 +160,10 @@ export interface EventRequest {
 export interface TripRequest {
 	name: string;
 	description?: string;
-	startDate: string;
-	endDate?: string;
-	startTime?: string;
-	endTime?: string;
+	departureDate: string;
+	arrivalDate?: string;
+	departureTime?: string;
+	arrivalTime?: string;
 	originName?: string;
 	originAddress?: string;
 	originLatitude?: number;
@@ -175,8 +177,6 @@ export interface TripRequest {
 	destinationPlaceId?: string;
 	destinationMetadata?: Record<string, any>;
 	transportMode: TransportMode;
-	departureTime?: string;
-	arrivalTime?: string;
 	bookingReference?: string;
 	isCompleted?: boolean;
 	displayOrder?: number;
