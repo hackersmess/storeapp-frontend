@@ -234,7 +234,8 @@ export interface ActivityParticipant {
 export interface ActivityExpense {
 	id: number;
 	activityId: number;
-	paidBy: GroupMemberBasic;
+	paidBy?: GroupMemberBasic; // legacy/fallback
+	payers?: GroupMemberBasic[]; // multi-payer list
 	description: string;
 	amount: number;
 	currency: string;
@@ -251,6 +252,8 @@ export interface ActivityExpenseSplit {
 	expenseId: number;
 	groupMember: GroupMemberBasic;
 	amount: number;
+	isPayer?: boolean;
+	paidAmount?: number;
 	isPaid: boolean;
 	paidAt?: string;
 	createdAt: string;
@@ -325,16 +328,17 @@ export interface ActivityParticipantRequest {
 }
 
 export interface ActivityExpenseRequest {
-	paidById: number;
 	description: string;
-	amount: number;
 	currency?: string;
+	payers: { groupMemberId: number; paidAmount: number }[];
 	splits: ExpenseSplitRequest[];
 }
 
 export interface ExpenseSplitRequest {
 	groupMemberId: number;
 	amount: number;
+	isPayer?: boolean;
+	paidAmount?: number;
 }
 
 export interface UpdateParticipantStatusRequest {

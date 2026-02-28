@@ -8,6 +8,7 @@ import { GroupRole, GroupMember, AddMemberRequest } from '../../../models/group.
 import { User, UserBasic } from '../../../models/user.model';
 import { GroupService } from '../../../services/group.service';
 import { AuthService } from '../../../services/auth.service';
+import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { MembersListComponent } from '../shared/members-list/members-list.component';
 
 @Component({
@@ -23,6 +24,7 @@ export class GroupFormComponent implements OnInit {
 	private router = inject(Router);
 	private route = inject(ActivatedRoute);
 	private authService = inject(AuthService);
+	private breadcrumb = inject(BreadcrumbService);
 
 	groupForm!: FormGroup;
 	groupId: number | null = null;
@@ -151,6 +153,7 @@ export class GroupFormComponent implements OnInit {
 				}
 
 				this.loading.set(false);
+				this.breadcrumb.set({ title: group.name });
 			},
 			error: (err) => {
 				console.error('Error loading group:', err);

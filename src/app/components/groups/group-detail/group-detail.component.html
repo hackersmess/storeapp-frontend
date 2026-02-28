@@ -26,7 +26,17 @@
       >
         <div class="cover-overlay">
           <div class="cover-content">
-            <h1>{{ group()!.name }}</h1>
+            <div class="group-title-row">
+              <h1>{{ group()!.name }}</h1>
+              <button
+                class="info-btn"
+                (click)="openGroupInfoSheet()"
+                type="button"
+                aria-label="Informazioni gruppo"
+              >
+                <ng-icon name="lucideInfo" size="20"></ng-icon>
+              </button>
+            </div>
             <div class="group-meta">
               <div class="meta-item">
                 <ng-icon name="lucideCalendar"></ng-icon>
@@ -64,6 +74,15 @@
         </button>
         <button
           class="tab-btn"
+          [class.active]="activeTab() === 'expenses'"
+          (click)="setActiveTab('expenses')"
+          type="button"
+        >
+          <ng-icon name="lucideWallet" size="18"></ng-icon>
+          <span>Spese</span>
+        </button>
+        <button
+          class="tab-btn"
           [class.active]="activeTab() === 'polls'"
           (click)="setActiveTab('polls')"
           type="button"
@@ -96,7 +115,7 @@
                 (dateSelected)="onDateSelected($event)"
                 (activityClick)="onActivityClick($event)"
                 (createActivity)="onAddActivity($event)"
-                (addExpense)="openExpenseModal($event)"
+                (addExpense)="openExpenseSheet($event)"
                 (deleteActivity)="onDeleteActivity($event)"
               >
               </app-group-calendar>
@@ -107,6 +126,111 @@
                 @if (isAdmin()) {
                   <button class="btn-primary" (click)="editGroup()">Configura Date</button>
                 }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Expenses Tab -->
+        @if (activeTab() === 'expenses') {
+          <div class="expenses-section">
+            @if (loadingExpensesTab()) {
+              <div class="loading-small">
+                <div class="spinner-sm"></div>
+                <p>Caricamento spese...</p>
+              </div>
+            } @else if (activitiesWithExpenses().length === 0) {
+              <div class="empty-state">
+                <ng-icon name="lucideWallet" size="48"></ng-icon>
+                <p>Nessuna spesa registrata</p>
+                <p class="text-muted">Apri un'attività dal calendario per aggiungere le spese</p>
+              </div>
+            } @else {
+              @for (activity of activitiesWithExpenses(); track activity.id) {
+                <!-- Card attività: click espande il dettaglio spese -->
+                <div
+                  class="expense-activity-card"
+                  [class.expanded]="selectedExpenseActivityId() === activity.id"
+                  (click)="selectExpenseActivity(activity.id)"
+                >
+                  <div class="expense-activity-header">
+                    <div class="expense-activity-info">
+                      <span class="expense-activity-icon">
+                        {{ activity.activityType === 'EVENT' ? '📍' : '✈️' }}
+                      </span>
+                      <div>
+                        <h3 class="expense-activity-name">{{ activity.name }}</h3>
+                        <span class="expense-activity-date">{{
+                          formatDate(activity.startDate)
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="expense-total">
+                      <span class="expense-total-amount"
+                        >{{ activity.totalCost | number: '1.2-2' }} €</span
+                      >
+                      <span class="expense-total-label">totale</span>
+                      <ng-icon
+                        [name]="
+                          selectedExpenseActivityId() === activity.id
+                            ? 'lucideChevronUp'
+                            : 'lucideChevronDown'
+                        "
+                        size="16"
+                      ></ng-icon>
+                    </div>
+                  </div>
+
+                  <!-- Dettaglio spese espandibile -->
+                  @if (selectedExpenseActivityId() === activity.id) {
+                    <div class="expense-detail" (click)="$event.stopPropagation()">
+                      @if (loadingActivityExpenses()) {
+                        <div class="loading-small">
+                          <div class="spinner-sm"></div>
+                        </div>
+                      } @else {
+                        @for (expense of activityExpenses(); track expense.id) {
+                          <div class="expense-item">
+                            <div class="expense-item-info">
+                              <span class="expense-item-desc">{{ expense.description }}</span>
+                            </div>
+                            <div class="expense-item-right">
+                              <span class="expense-item-amount"
+                                >{{ expense.amount | number: '1.2-2' }} {{ expense.currency }}</span
+                              >
+                              <div class="expense-item-actions">
+                                <button
+                                  class="btn-expense-action btn-edit"
+                                  (click)="editExpense(expense, activity.id)"
+                                  title="Modifica"
+                                >
+                                  <ng-icon name="lucideEdit" size="14"></ng-icon>
+                                </button>
+                                <button
+                                  class="btn-expense-action btn-delete"
+                                  (click)="confirmDeleteExpense(expense, activity.id)"
+                                  title="Elimina"
+                                >
+                                  <ng-icon name="lucideTrash2" size="14"></ng-icon>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                        <button class="btn-add-expense" (click)="openExpenseModal(activity.id)">
+                          <ng-icon name="lucidePlus" size="16"></ng-icon>
+                          Aggiungi spesa
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+              <div class="expenses-grand-total">
+                <span>Totale gruppo</span>
+                <span class="grand-total-amount"
+                  >{{ groupExpensesTotal() | number: '1.2-2' }} €</span
+                >
               </div>
             }
           </div>
@@ -192,6 +316,7 @@
       [activityId]="expenseActivityId()"
       [members]="group()?.members || []"
       [isOpen]="showExpenseModal()"
+      [expenseToEdit]="expenseToEdit()"
       (close)="closeExpenseModal()"
       (save)="onSaveExpense($event)"
     >
@@ -272,5 +397,241 @@
       (cancel)="cancelDeleteActivity()"
     >
     </app-confirm-dialog>
+
+    <!-- Conferma eliminazione spesa -->
+    <app-confirm-dialog
+      [show]="showDeleteExpenseConfirm()"
+      title="Elimina Spesa"
+      [message]="
+        'Sei sicuro di voler eliminare la spesa &quot;' +
+        (expenseToDelete()?.expense?.description ?? '') +
+        '&quot;? Questa azione è irreversibile.'
+      "
+      confirmText="Elimina"
+      cancelText="Annulla"
+      confirmButtonClass="btn-danger"
+      [loading]="savingExpense()"
+      (confirm)="doDeleteExpense()"
+      (cancel)="cancelDeleteExpense()"
+    >
+    </app-confirm-dialog>
+
+    <!-- ============ GROUP INFO BOTTOM SHEET ============ -->
+    @if (showGroupInfoSheet()) {
+      <div class="info-sheet-backdrop" (click)="closeGroupInfoSheet()"></div>
+      <div class="info-sheet" role="dialog" aria-modal="true" aria-label="Informazioni gruppo">
+        <!-- Handle drag -->
+        <div class="sheet-handle"></div>
+
+        <!-- Header -->
+        <div class="sheet-header">
+          <h2>Informazioni Gruppo</h2>
+          <button
+            class="sheet-close-btn"
+            (click)="closeGroupInfoSheet()"
+            type="button"
+            aria-label="Chiudi"
+          >
+            <ng-icon name="lucideX" size="20"></ng-icon>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="sheet-body">
+          <!-- Nome -->
+          <div class="sheet-field">
+            <span class="field-label">Nome</span>
+            <span class="field-value">{{ group()!.name }}</span>
+          </div>
+
+          <!-- Descrizione -->
+          @if (group()!.description) {
+            <div class="sheet-field">
+              <span class="field-label">Descrizione</span>
+              <p class="field-value field-description">{{ group()!.description }}</p>
+            </div>
+          }
+
+          <!-- Date Vacanza -->
+          <div class="sheet-field">
+            <span class="field-label">
+              <ng-icon name="lucideCalendar" size="14"></ng-icon>
+              Periodo Vacanza
+            </span>
+            <span class="field-value">
+              @if (group()!.vacationStartDate && group()!.vacationEndDate) {
+                {{ formatDate(group()!.vacationStartDate) }} →
+                {{ formatDate(group()!.vacationEndDate) }}
+              } @else {
+                <span class="field-empty">Non specificato</span>
+              }
+            </span>
+          </div>
+
+          <!-- Cover Image URL -->
+          @if (group()!.coverImageUrl) {
+            <div class="sheet-field">
+              <span class="field-label">
+                <ng-icon name="lucideLink" size="14"></ng-icon>
+                Immagine di Copertina
+              </span>
+              <a
+                class="field-value field-link"
+                [href]="group()!.coverImageUrl"
+                target="_blank"
+                rel="noopener"
+              >
+                {{ group()!.coverImageUrl }}
+              </a>
+            </div>
+          }
+
+          <!-- Creatore -->
+          <div class="sheet-field">
+            <span class="field-label">
+              <ng-icon name="lucideCrown" size="14"></ng-icon>
+              Creato da
+            </span>
+            <div class="field-creator">
+              @if (group()!.createdBy.avatarUrl) {
+                <img
+                  [src]="group()!.createdBy.avatarUrl"
+                  [alt]="group()!.createdBy.name"
+                  class="creator-avatar"
+                />
+              } @else {
+                <div class="creator-avatar-placeholder">
+                  {{ group()!.createdBy.name.charAt(0).toUpperCase() }}
+                </div>
+              }
+              <div class="creator-info-text">
+                <span class="creator-name">{{ group()!.createdBy.name }}</span>
+                <span class="creator-email">{{ group()!.createdBy.email }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data creazione -->
+          <div class="sheet-field">
+            <span class="field-label">Creato il</span>
+            <span class="field-value">{{ formatDateTime(group()!.createdAt) }}</span>
+          </div>
+
+          <!-- Membri (collegamento rapido) -->
+          <div
+            class="sheet-field sheet-field--clickable"
+            (click)="closeGroupInfoSheet(); setActiveTab('members')"
+          >
+            <span class="field-label">
+              <ng-icon name="lucideUsers" size="14"></ng-icon>
+              Membri
+            </span>
+            <div class="field-value field-members-link">
+              <span
+                >{{ group()!.memberCount }}
+                {{ group()!.memberCount === 1 ? 'membro' : 'membri' }}</span
+              >
+              <ng-icon
+                name="lucideChevronDown"
+                size="16"
+                style="transform: rotate(-90deg)"
+              ></ng-icon>
+            </div>
+          </div>
+
+          <!-- Azioni admin -->
+          @if (isAdmin()) {
+            <div class="sheet-actions">
+              <button
+                class="sheet-action-btn"
+                (click)="closeGroupInfoSheet(); editGroup()"
+                type="button"
+              >
+                <ng-icon name="lucideEdit" size="16"></ng-icon>
+                Modifica gruppo
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ============ EXPENSE BOTTOM SHEET (da calendario) ============ -->
+    @if (showExpenseSheet()) {
+      <div class="info-sheet-backdrop" (click)="closeExpenseSheet()"></div>
+      <div
+        class="info-sheet expense-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Spese attività"
+      >
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+          <div class="sheet-header-info">
+            <h2>Spese</h2>
+            <span class="sheet-subtitle">{{ expenseSheetActivityName() }}</span>
+          </div>
+          <button
+            class="sheet-close-btn"
+            (click)="closeExpenseSheet()"
+            type="button"
+            aria-label="Chiudi"
+          >
+            <ng-icon name="lucideX" size="20"></ng-icon>
+          </button>
+        </div>
+
+        <div class="sheet-body">
+          @if (loadingExpenseSheet()) {
+            <div class="loading-small">
+              <div class="spinner-sm"></div>
+              <p>Caricamento spese...</p>
+            </div>
+          } @else if (expenseSheetExpenses().length === 0) {
+            <div class="sheet-empty-state">
+              <ng-icon name="lucideWallet" size="36"></ng-icon>
+              <p>Nessuna spesa ancora registrata per questa attività</p>
+            </div>
+          } @else {
+            <div class="sheet-expenses-list">
+              @for (expense of expenseSheetExpenses(); track expense.id) {
+                <div class="sheet-expense-item">
+                  <div class="sheet-expense-info">
+                    <span class="sheet-expense-desc">{{ expense.description }}</span>
+                  </div>
+                  <div class="sheet-expense-right">
+                    <span class="sheet-expense-amount">
+                      {{ expense.amount | number: '1.2-2' }} {{ expense.currency }}
+                    </span>
+                    <div class="expense-item-actions">
+                      <button
+                        class="btn-expense-action btn-edit"
+                        (click)="editExpenseFromSheet(expense)"
+                        title="Modifica"
+                      >
+                        <ng-icon name="lucideEdit" size="14"></ng-icon>
+                      </button>
+                      <button
+                        class="btn-expense-action btn-delete"
+                        (click)="confirmDeleteExpenseFromSheet(expense)"
+                        title="Elimina"
+                      >
+                        <ng-icon name="lucideTrash2" size="14"></ng-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <button class="btn-sheet-add-expense" (click)="openExpenseModalFromSheet()" type="button">
+            <ng-icon name="lucidePlus" size="18"></ng-icon>
+            Aggiungi spesa
+          </button>
+        </div>
+      </div>
+    }
   }
 </div>

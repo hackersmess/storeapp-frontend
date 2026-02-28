@@ -27,6 +27,7 @@ export interface ExpenseRequest {
 	currency: string;
 	payers: PayerRequest[];
 	splits: SplitRequest[];
+	expenseIdToReplace?: number; // set when editing (delete old + create new)
 }
 
 export interface PayerRequest {

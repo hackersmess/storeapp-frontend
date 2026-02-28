@@ -1,21 +1,34 @@
 <nav class="navbar">
   <div class="navbar-container">
-    <!-- Logo -->
-    <a routerLink="/" class="navbar-brand">
-      <span class="logo">StoreApp</span>
-    </a>
-
-    <!-- Navigation Links -->
-    @if (currentUser$ | async; as user) {
-      <div class="navbar-menu">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          Home
+    <!-- Sinistra: back button o logo -->
+    <div class="navbar-left">
+      @if (breadcrumb.state().showBack) {
+        <button class="back-btn" (click)="goBack()" type="button" aria-label="Torna indietro">
+          <ng-icon name="lucideChevronLeft" size="22"></ng-icon>
+        </button>
+        <span class="navbar-page-title">{{ breadcrumb.state().title }}</span>
+      } @else {
+        <a routerLink="/home" class="navbar-brand">
+          <span class="logo">StoreApp</span>
         </a>
-        <a routerLink="/groups" routerLinkActive="active"> Gruppi </a>
-        <a routerLink="/profile" routerLinkActive="active"> Profilo </a>
-      </div>
+      }
+    </div>
 
-      <!-- User Menu -->
+    <!-- Navigation Links (solo su desktop, solo su rotte root) -->
+    @if (currentUser$ | async; as user) {
+      @if (!breadcrumb.state().showBack) {
+        <div class="navbar-menu">
+          <a
+            routerLink="/home"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            >Home</a
+          >
+          <a routerLink="/groups" routerLinkActive="active">Gruppi</a>
+        </div>
+      }
+
+      <!-- User Menu (sempre visibile) -->
       <div class="navbar-user">
         <button class="user-button" (click)="toggleMenu()">
           <div class="user-avatar">
@@ -43,7 +56,6 @@
           </svg>
         </button>
 
-        <!-- Dropdown Menu -->
         @if (isMenuOpen) {
           <div class="dropdown-menu">
             <a routerLink="/profile" class="dropdown-item" (click)="toggleMenu()">
@@ -63,16 +75,14 @@
         }
       </div>
     } @else {
-      <!-- Guest Navigation -->
       <div class="navbar-auth">
-        <a routerLink="/login" class="btn-secondary"> Accedi </a>
-        <a routerLink="/register" class="btn-primary"> Registrati </a>
+        <a routerLink="/login" class="btn-secondary">Accedi</a>
+        <a routerLink="/register" class="btn-primary">Registrati</a>
       </div>
     }
   </div>
 </nav>
 
-<!-- Overlay per chiudere menu mobile -->
 @if (isMenuOpen) {
   <div class="overlay" (click)="toggleMenu()"></div>
 }

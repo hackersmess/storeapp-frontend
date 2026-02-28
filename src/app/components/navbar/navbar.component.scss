@@ -34,6 +34,51 @@
   }
 }
 
+// ---- Back navigation ----
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0; // permette al titolo di troncarsi
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+
+  &:active {
+    background: var(--color-bg-tertiary);
+  }
+}
+
+.navbar-page-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+
+  @media (min-width: 480px) {
+    max-width: 320px;
+  }
+}
+
 .navbar-menu {
   display: flex;
   gap: 0.5rem;

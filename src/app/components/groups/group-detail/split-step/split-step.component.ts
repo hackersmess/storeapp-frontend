@@ -16,6 +16,7 @@ export class SplitStepComponent {
 	members = input.required<GroupMember[]>();
 	totalAmount = input.required<number>();
 	payers = input.required<Map<number, number>>(); // memberId -> amount paid
+	initialSplits = input<MemberWithAmount[]>([]); // pre-fill on edit
 
 	// Outputs
 	splitsChange = output<MemberWithAmount[]>();
@@ -86,6 +87,27 @@ export class SplitStepComponent {
 	constructor() {
 		// Start with no members selected - user must choose
 		// (They can click "Seleziona tutti" if they want everyone)
+
+		// Pre-populate when editing an existing expense
+		effect(() => {
+			const initial = this.initialSplits();
+			if (initial.length > 0) {
+				const selected = new Set<number>(initial.map(s => s.groupMemberId));
+				this.selectedMembers.set(selected);
+				// Check if it's a custom split (amounts differ from equal)
+				const total = this.totalAmount();
+				const equalAmount = selected.size > 0 ? total / selected.size : 0;
+				const isCustom = initial.some(s => Math.abs(s.amount - equalAmount) > 0.01);
+				if (isCustom) {
+					const map = new Map<number, number>();
+					initial.forEach(s => map.set(s.groupMemberId, s.amount));
+					this.customSplits.set(map);
+					this.splitType.set('custom');
+				} else {
+					this.splitType.set('equal');
+				}
+			}
+		});
 
 		// Emit changes
 		effect(() => {

@@ -4,9 +4,9 @@
       <div class="modal-header">
         <h2 class="modal-title">
           @if (currentStep() === 1) {
-            Nuova spesa - Paganti
+            {{ isEditMode() ? 'Modifica spesa' : 'Nuova spesa' }} - Paganti
           } @else {
-            Nuova spesa - Divisione
+            {{ isEditMode() ? 'Modifica spesa' : 'Nuova spesa' }} - Divisione
           }
         </h2>
         <button type="button" class="close-btn" (click)="closeModal()">
@@ -37,7 +37,7 @@
 
             <app-payers-step
               [members]="members()"
-              [initialPayers]="[]"
+              [initialPayers]="initialPayersForStep()"
               (payersChange)="onPayersChange($event)"
               (validChange)="onPayersValidChange($event)"
             />
@@ -50,6 +50,7 @@
             [members]="members()"
             [totalAmount]="totalAmount()"
             [payers]="payers()"
+            [initialSplits]="initialSplitsForStep()"
             (splitsChange)="onSplitsChange($event)"
             (validChange)="onSplitsValidChange($event)"
           />
@@ -79,7 +80,7 @@
             (click)="saveExpense()"
             [disabled]="!canSave()"
           >
-            Salva spesa
+            {{ isEditMode() ? 'Salva modifiche' : 'Salva spesa' }}
           </button>
         }
       </div>
