@@ -271,6 +271,7 @@ export interface ActivityCalendar {
 	end: string;
 	dayOfWeek: string;
 	activityDate: string;
+	endDate?: string;      // null se single-day, valorizzato se multidata
 	calendarStatus: CalendarStatus;
 	description?: string;
 	locationName?: string;

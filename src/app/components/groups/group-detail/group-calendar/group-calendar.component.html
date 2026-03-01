@@ -33,9 +33,15 @@
                   <div class="activity-content">
                     <div class="activity-title">{{ activity.title }}</div>
                     <div class="activity-meta">
-                      <span class="activity-time">{{ formatTime(activity.start) }}</span>
-                      <span class="activity-separator">•</span>
-                      <span class="activity-time">{{ formatTime(activity.end) }}</span>
+                      @if (isMultiDay(activity)) {
+                        <span class="activity-date-range">{{ formatDateRange(activity) }}</span>
+                        <span class="activity-separator">•</span>
+                        <span class="activity-time">{{ formatTime(activity.start) }}</span>
+                      } @else {
+                        <span class="activity-time">{{ formatTime(activity.start) }}</span>
+                        <span class="activity-separator">•</span>
+                        <span class="activity-time">{{ formatTime(activity.end) }}</span>
+                      }
                       @if (activity.locationName) {
                         <span class="activity-separator">•</span>
                         <span class="activity-location">

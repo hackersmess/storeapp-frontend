@@ -123,4 +123,17 @@ export class GroupCalendarComponent {
 			minute: '2-digit'
 		});
 	}
+
+	/**
+	 * Formatta l'intervallo date per attività multidata:
+	 * es. "1 mar → 5 mar" oppure "28 feb → 2 mar"
+	 */
+	formatDateRange(activity: ActivityCalendar): string {
+		const fmt = (d: string) => new Date(d).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+		return `${fmt(activity.activityDate)} → ${fmt(activity.endDate!)}`;
+	}
+
+	isMultiDay(activity: ActivityCalendar): boolean {
+		return !!activity.endDate && activity.endDate !== activity.activityDate;
+	}
 }
