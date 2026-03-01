@@ -125,6 +125,7 @@ export class GroupDetailComponent implements OnInit {
 
 	// Confirm dialogs
 	showRemoveMemberConfirm = signal(false);
+	removeMemberError = signal<string | null>(null);
 	showLeaveGroupConfirm = signal(false);
 	memberToRemove: GroupMember | null = null;
 	confirmLoading = signal(false);
@@ -333,6 +334,7 @@ export class GroupDetailComponent implements OnInit {
 
 	removeMember(member: GroupMember) {
 		this.memberToRemove = member;
+		this.removeMemberError.set(null);
 		this.showRemoveMemberConfirm.set(true);
 	}
 
@@ -341,6 +343,7 @@ export class GroupDetailComponent implements OnInit {
 		if (!currentGroup || !this.memberToRemove) return;
 
 		this.confirmLoading.set(true);
+		this.removeMemberError.set(null);
 		this.groupService.removeMember(currentGroup.id, this.memberToRemove.id).subscribe({
 			next: () => {
 				this.confirmLoading.set(false);
@@ -351,7 +354,8 @@ export class GroupDetailComponent implements OnInit {
 			error: (err) => {
 				console.error('Error removing member:', err);
 				this.confirmLoading.set(false);
-				this.error.set('Errore nella rimozione del membro: ' + (err.error?.message || err.message));
+				const msg = err.error?.message || err.message || 'Errore nella rimozione del membro.';
+				this.removeMemberError.set(msg);
 			}
 		});
 	}

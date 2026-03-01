@@ -16,6 +16,7 @@ export class ConfirmDialogComponent {
 	@Input() cancelText = 'Annulla';
 	@Input() confirmButtonClass = 'btn-danger';
 	@Input() loading = false;
+	@Input() errorMessage: string | null = null;
 
 	@Output() confirm = new EventEmitter<void>();
 	@Output() cancel = new EventEmitter<void>();

@@ -9,6 +9,11 @@
       <p>{{ message }}</p>
     </div>
 
+    <div class="modal-error" *ngIf="errorMessage">
+      <span class="modal-error-icon">⚠</span>
+      {{ errorMessage }}
+    </div>
+
     <div class="modal-footer">
       <button
         *ngIf="cancelText"

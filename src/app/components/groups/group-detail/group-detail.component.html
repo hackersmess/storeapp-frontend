@@ -452,8 +452,9 @@
       cancelText="Annulla"
       confirmButtonClass="btn-danger"
       [loading]="confirmLoading()"
+      [errorMessage]="removeMemberError()"
       (confirm)="confirmRemoveMember()"
-      (cancel)="showRemoveMemberConfirm.set(false)"
+      (cancel)="showRemoveMemberConfirm.set(false); removeMemberError.set(null)"
     >
     </app-confirm-dialog>
 
