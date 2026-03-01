@@ -306,7 +306,9 @@
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      transition:
+        background 0.15s,
+        color 0.15s;
 
       &:hover:not(.active) {
         background: var(--color-bg-elevated, #1f1f1f);
@@ -558,6 +560,65 @@
     border-color: #ef4444;
     color: #ef4444;
   }
+
+  &.btn-view {
+    color: var(--color-text-secondary);
+
+    &.active {
+      color: #3ecf8e;
+      border-color: #3ecf8e;
+      background: rgba(62, 207, 142, 0.08);
+    }
+
+    &:hover {
+      background: var(--color-bg-hover);
+      border-color: var(--color-text-primary);
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+.expense-detail-panel {
+  padding: 12px 14px;
+  background: var(--color-bg-secondary, #141414);
+  border-top: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 0 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expense-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: var(--color-text-secondary, #888);
+  font-size: 12px;
+}
+
+.detail-section-label {
+  color: var(--color-text-secondary, #888);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.detail-member {
+  color: var(--color-text-primary, #fff);
+}
+
+.detail-value {
+  color: var(--color-text-primary, #fff);
+  font-weight: 500;
+}
+
+.detail-paid {
+  color: #3ecf8e;
 }
 
 .expenses-grand-total {

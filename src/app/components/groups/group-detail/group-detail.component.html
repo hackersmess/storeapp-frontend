@@ -134,7 +134,6 @@
         <!-- Expenses Tab -->
         @if (activeTab() === 'expenses') {
           <div class="expenses-section">
-
             <!-- Sub-tab navigation -->
             <div class="expenses-sub-tabs">
               <button
@@ -217,15 +216,17 @@
                               </div>
                               <div class="expense-item-right">
                                 <span class="expense-item-amount"
-                                  >{{ expense.amount | number: '1.2-2' }} {{ expense.currency }}</span
+                                  >{{ expense.amount | number: '1.2-2' }}
+                                  {{ expense.currency }}</span
                                 >
                                 <div class="expense-item-actions">
                                   <button
-                                    class="btn-expense-action btn-edit"
-                                    (click)="editExpense(expense, activity.id)"
-                                    title="Modifica"
+                                    class="btn-expense-action btn-view"
+                                    (click)="$event.stopPropagation(); viewExpense(expense)"
+                                    [class.active]="viewingExpense()?.id === expense.id"
+                                    title="Dettaglio"
                                   >
-                                    <ng-icon name="lucideEdit" size="14"></ng-icon>
+                                    <ng-icon name="lucideEye" size="14"></ng-icon>
                                   </button>
                                   <button
                                     class="btn-expense-action btn-delete"
@@ -237,6 +238,46 @@
                                 </div>
                               </div>
                             </div>
+                            <!-- Pannello dettaglio spesa (sola lettura) -->
+                            @if (viewingExpense()?.id === expense.id) {
+                              <div class="expense-detail-panel" (click)="$event.stopPropagation()">
+                                <div class="expense-detail-row">
+                                  <span class="detail-label">Importo totale</span>
+                                  <span class="detail-value"
+                                    >{{ expense.amount | number: '1.2-2' }}
+                                    {{ expense.currency }}</span
+                                  >
+                                </div>
+                                @if (expense.splits && expense.splits.length > 0) {
+                                  <div class="detail-section-label">Chi ha pagato</div>
+                                  @for (s of expense.splits; track s.id) {
+                                    @if (s.isPayer) {
+                                      <div class="expense-detail-row">
+                                        <span class="detail-member">{{
+                                          s.groupMember.user?.name
+                                        }}</span>
+                                        <span class="detail-value detail-paid"
+                                          >{{ s.paidAmount | number: '1.2-2' }}
+                                          {{ expense.currency }}</span
+                                        >
+                                      </div>
+                                    }
+                                  }
+                                  <div class="detail-section-label">Divisione</div>
+                                  @for (s of expense.splits; track s.id) {
+                                    <div class="expense-detail-row">
+                                      <span class="detail-member">{{
+                                        s.groupMember.user?.name
+                                      }}</span>
+                                      <span class="detail-value"
+                                        >{{ s.amount | number: '1.2-2' }}
+                                        {{ expense.currency }}</span
+                                      >
+                                    </div>
+                                  }
+                                }
+                              </div>
+                            }
                           }
                           <button class="btn-add-expense" (click)="openExpenseModal(activity.id)">
                             <ng-icon name="lucidePlus" size="16"></ng-icon>
@@ -263,7 +304,6 @@
                 [refreshTrigger]="settlementRefreshTrigger()"
               />
             }
-
           </div>
         }
 
@@ -279,7 +319,7 @@
           <div class="map-section">
             <div class="empty-state">
               <img
-                src="https://media.licdn.com/dms/image/v2/D5622AQHppzNBHQFVJQ/feedshare-shrink_2048_1536/B56ZeW6b2DHQAs-/0/1750583612535?e=2147483647&v=beta&t=P5So91D-4R3e9ua1fJY9EXPDSSHBWq5W-bzof8yXsAQ"
+                src="assets/map-placeholder.jpg"
                 alt="Mappa del tesoro"
                 class="map-placeholder-image"
               />
@@ -349,7 +389,6 @@
       [activityId]="expenseActivityId()"
       [members]="group()?.members || []"
       [isOpen]="showExpenseModal()"
-      [expenseToEdit]="expenseToEdit()"
       (close)="closeExpenseModal()"
       (save)="onSaveExpense($event)"
     >
@@ -639,11 +678,12 @@
                     </span>
                     <div class="expense-item-actions">
                       <button
-                        class="btn-expense-action btn-edit"
-                        (click)="editExpenseFromSheet(expense)"
-                        title="Modifica"
+                        class="btn-expense-action btn-view"
+                        (click)="viewExpenseFromSheet(expense)"
+                        [class.active]="viewingExpense()?.id === expense.id"
+                        title="Dettaglio"
                       >
-                        <ng-icon name="lucideEdit" size="14"></ng-icon>
+                        <ng-icon name="lucideEye" size="14"></ng-icon>
                       </button>
                       <button
                         class="btn-expense-action btn-delete"
@@ -655,6 +695,39 @@
                     </div>
                   </div>
                 </div>
+                <!-- Pannello dettaglio spesa (sola lettura) nel bottom sheet -->
+                @if (viewingExpense()?.id === expense.id) {
+                  <div class="expense-detail-panel">
+                    <div class="expense-detail-row">
+                      <span class="detail-label">Importo totale</span>
+                      <span class="detail-value"
+                        >{{ expense.amount | number: '1.2-2' }} {{ expense.currency }}</span
+                      >
+                    </div>
+                    @if (expense.splits && expense.splits.length > 0) {
+                      <div class="detail-section-label">Chi ha pagato</div>
+                      @for (s of expense.splits; track s.id) {
+                        @if (s.isPayer) {
+                          <div class="expense-detail-row">
+                            <span class="detail-member">{{ s.groupMember.user?.name }}</span>
+                            <span class="detail-value detail-paid"
+                              >{{ s.paidAmount | number: '1.2-2' }} {{ expense.currency }}</span
+                            >
+                          </div>
+                        }
+                      }
+                      <div class="detail-section-label">Divisione</div>
+                      @for (s of expense.splits; track s.id) {
+                        <div class="expense-detail-row">
+                          <span class="detail-member">{{ s.groupMember.user?.name }}</span>
+                          <span class="detail-value"
+                            >{{ s.amount | number: '1.2-2' }} {{ expense.currency }}</span
+                          >
+                        </div>
+                      }
+                    }
+                  </div>
+                }
               }
             </div>
           }

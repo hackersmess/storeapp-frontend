@@ -1,124 +1,127 @@
 <div class="settlement-container">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="settlement-loading">
+      <ng-icon name="lucideRefreshCw" size="20" class="spin" />
+      <span>Caricamento saldi...</span>
+    </div>
+  }
 
-	<!-- Loading -->
-	@if (loading()) {
-		<div class="settlement-loading">
-			<ng-icon name="lucideRefreshCw" size="20" class="spin" />
-			<span>Caricamento saldi...</span>
-		</div>
-	}
+  <!-- Error -->
+  @if (error() && !loading()) {
+    <div class="settlement-error">
+      <span>{{ error() }}</span>
+      <button class="btn-retry" (click)="load()">Riprova</button>
+    </div>
+  }
 
-	<!-- Error -->
-	@if (error() && !loading()) {
-		<div class="settlement-error">
-			<span>{{ error() }}</span>
-			<button class="btn-retry" (click)="load()">Riprova</button>
-		</div>
-	}
+  <!-- Empty state -->
+  @if (!loading() && !error() && settlement()?.expenseCount === 0) {
+    <div class="settlement-empty">
+      <ng-icon name="lucideCheckCircle" size="32" />
+      <p>Nessuna spesa registrata per questo gruppo.</p>
+    </div>
+  }
 
-	<!-- Empty state -->
-	@if (!loading() && !error() && settlement()?.expenseCount === 0) {
-		<div class="settlement-empty">
-			<ng-icon name="lucideCheckCircle" size="32" />
-			<p>Nessuna spesa registrata per questo gruppo.</p>
-		</div>
-	}
+  <!-- Content -->
+  @if (!loading() && !error() && settlement() && settlement()!.expenseCount > 0) {
+    <!-- Summary banner -->
+    <div class="settlement-summary">
+      <span class="summary-label">Totale spese</span>
+      <span class="summary-amount">{{ settlement()!.totalExpenses | number: '1.2-2' }} €</span>
+      <span class="summary-count"
+        >{{ settlement()!.expenseCount }} spese · {{ settlement()!.transactionCount }} pagamenti da
+        fare</span
+      >
+    </div>
 
-	<!-- Content -->
-	@if (!loading() && !error() && settlement() && settlement()!.expenseCount > 0) {
+    <!-- ─────── Bilanci ─────── -->
+    <section class="settlement-section">
+      <h4 class="section-title">Bilanci</h4>
+      <div class="balances-list">
+        @for (b of settlement()!.balances; track b.groupMemberId) {
+          <div class="balance-card" [class]="balanceClass(b.balance)">
+            <!-- Avatar -->
+            <div class="member-avatar" [class]="balanceClass(b.balance)">
+              @if (b.memberAvatarUrl) {
+                <img [src]="b.memberAvatarUrl" [alt]="b.memberName" />
+              } @else {
+                <span>{{ avatarInitials(b.memberName) }}</span>
+              }
+            </div>
 
-		<!-- Summary banner -->
-		<div class="settlement-summary">
-			<span class="summary-label">Totale spese</span>
-			<span class="summary-amount">{{ settlement()!.totalExpenses | number:'1.2-2' }} €</span>
-			<span class="summary-count">{{ settlement()!.expenseCount }} spese · {{ settlement()!.transactionCount }} pagamenti da fare</span>
-		</div>
+            <!-- Info -->
+            <div class="member-info">
+              <span class="member-name">{{ b.memberName }}</span>
+              <div class="member-stats">
+                <span class="stat"
+                  >Pagato: <b>{{ b.totalPaid | number: '1.2-2' }} €</b></span
+                >
+                <span class="stat"
+                  >Quota: <b>{{ b.totalOwed | number: '1.2-2' }} €</b></span
+                >
+              </div>
+            </div>
 
-		<!-- ─────── Bilanci ─────── -->
-		<section class="settlement-section">
-			<h4 class="section-title">Bilanci</h4>
-			<div class="balances-list">
-				@for (b of settlement()!.balances; track b.groupMemberId) {
-					<div class="balance-card" [class]="balanceClass(b.balance)">
+            <!-- Balance badge -->
+            <div class="balance-badge" [class]="balanceClass(b.balance)">
+              <ng-icon [name]="balanceIcon(b.balance)" size="14" />
+              <span class="balance-amount">{{ b.balance | number: '1.2-2' }} €</span>
+              <span class="balance-label">{{ balanceLabel(b.balance) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
 
-						<!-- Avatar -->
-						<div class="member-avatar" [class]="balanceClass(b.balance)">
-							@if (b.memberAvatarUrl) {
-								<img [src]="b.memberAvatarUrl" [alt]="b.memberName" />
-							} @else {
-								<span>{{ avatarInitials(b.memberName) }}</span>
-							}
-						</div>
+    <!-- ─────── Come saldare ─────── -->
+    @if (settlement()!.settlements.length > 0) {
+      <section class="settlement-section">
+        <h4 class="section-title">Come saldare</h4>
+        <div class="transactions-list">
+          @for (tx of settlement()!.settlements; track $index) {
+            <div class="transaction-row">
+              <!-- Da -->
+              <div class="tx-member from">
+                <div class="tx-avatar debit">
+                  @if (tx.fromMemberAvatarUrl) {
+                    <img [src]="tx.fromMemberAvatarUrl" [alt]="tx.fromMemberName" />
+                  } @else {
+                    <span>{{ avatarInitials(tx.fromMemberName) }}</span>
+                  }
+                </div>
+                <span class="tx-name">{{ tx.fromMemberName }}</span>
+              </div>
 
-						<!-- Info -->
-						<div class="member-info">
-							<span class="member-name">{{ b.memberName }}</span>
-							<div class="member-stats">
-								<span class="stat">Pagato: <b>{{ b.totalPaid | number:'1.2-2' }} €</b></span>
-								<span class="stat">Quota: <b>{{ b.totalOwed | number:'1.2-2' }} €</b></span>
-							</div>
-						</div>
+              <!-- Freccia + importo -->
+              <div class="tx-arrow">
+                <span class="tx-amount">{{ tx.amount | number: '1.2-2' }} €</span>
+                <ng-icon name="lucideArrowRight" size="16" />
+              </div>
 
-						<!-- Balance badge -->
-						<div class="balance-badge" [class]="balanceClass(b.balance)">
-							<ng-icon [name]="balanceIcon(b.balance)" size="14" />
-							<span class="balance-amount">{{ b.balance | number:'1.2-2' }} €</span>
-							<span class="balance-label">{{ balanceLabel(b.balance) }}</span>
-						</div>
-					</div>
-				}
-			</div>
-		</section>
-
-		<!-- ─────── Come saldare ─────── -->
-		@if (settlement()!.settlements.length > 0) {
-			<section class="settlement-section">
-				<h4 class="section-title">Come saldare</h4>
-				<div class="transactions-list">
-					@for (tx of settlement()!.settlements; track $index) {
-						<div class="transaction-row">
-
-							<!-- Da -->
-							<div class="tx-member from">
-								<div class="tx-avatar debit">
-									@if (tx.fromMemberAvatarUrl) {
-										<img [src]="tx.fromMemberAvatarUrl" [alt]="tx.fromMemberName" />
-									} @else {
-										<span>{{ avatarInitials(tx.fromMemberName) }}</span>
-									}
-								</div>
-								<span class="tx-name">{{ tx.fromMemberName }}</span>
-							</div>
-
-							<!-- Freccia + importo -->
-							<div class="tx-arrow">
-								<span class="tx-amount">{{ tx.amount | number:'1.2-2' }} €</span>
-								<ng-icon name="lucideArrowRight" size="16" />
-							</div>
-
-							<!-- A -->
-							<div class="tx-member to">
-								<div class="tx-avatar credit">
-									@if (tx.toMemberAvatarUrl) {
-										<img [src]="tx.toMemberAvatarUrl" [alt]="tx.toMemberName" />
-									} @else {
-										<span>{{ avatarInitials(tx.toMemberName) }}</span>
-									}
-								</div>
-								<span class="tx-name">{{ tx.toMemberName }}</span>
-							</div>
-						</div>
-					}
-				</div>
-			</section>
-		} @else {
-			<section class="settlement-section">
-				<h4 class="section-title">Come saldare</h4>
-				<div class="settlement-empty compact">
-					<ng-icon name="lucideCheckCircle" size="22" />
-					<p>Tutti i conti sono già in pari!</p>
-				</div>
-			</section>
-		}
-	}
+              <!-- A -->
+              <div class="tx-member to">
+                <div class="tx-avatar credit">
+                  @if (tx.toMemberAvatarUrl) {
+                    <img [src]="tx.toMemberAvatarUrl" [alt]="tx.toMemberName" />
+                  } @else {
+                    <span>{{ avatarInitials(tx.toMemberName) }}</span>
+                  }
+                </div>
+                <span class="tx-name">{{ tx.toMemberName }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="settlement-section">
+        <h4 class="section-title">Come saldare</h4>
+        <div class="settlement-empty compact">
+          <ng-icon name="lucideCheckCircle" size="22" />
+          <p>Tutti i conti sono già in pari!</p>
+        </div>
+      </section>
+    }
+  }
 </div>

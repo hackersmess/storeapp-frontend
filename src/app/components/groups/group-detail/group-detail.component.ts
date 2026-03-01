@@ -31,7 +31,8 @@ import {
 	lucideX,
 	lucideMapPin,
 	lucideLink,
-	lucideCrown
+	lucideCrown,
+	lucideEye
 } from '@ng-icons/lucide';
 import { GroupCalendarComponent } from './group-calendar/group-calendar.component';
 import { GroupPollsComponent } from './group-polls/group-polls.component';
@@ -77,7 +78,8 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		lucideX,
 		lucideMapPin,
 		lucideLink,
-		lucideCrown
+		lucideCrown,
+		lucideEye
 	})]
 })
 export class GroupDetailComponent implements OnInit {
@@ -136,7 +138,9 @@ export class GroupDetailComponent implements OnInit {
 	showExpenseModal = signal(false);
 	expenseActivityId = signal<number>(0);
 	savingExpense = signal(false);
-	expenseToEdit = signal<ActivityExpense | null>(null); // null = create, set = edit
+
+	// Visualizzazione dettaglio spesa (solo lettura, niente modifica)
+	viewingExpense = signal<ActivityExpense | null>(null);
 
 	// Conferma eliminazione spesa
 	showDeleteExpenseConfirm = signal(false);
@@ -693,33 +697,30 @@ export class GroupDetailComponent implements OnInit {
 
 	openExpenseModal(activityId: number) {
 		this.expenseActivityId.set(activityId);
-		this.expenseToEdit.set(null);
 		this.showExpenseModal.set(true);
 	}
 
 	closeExpenseModal() {
 		this.showExpenseModal.set(false);
 		this.expenseActivityId.set(0);
-		this.expenseToEdit.set(null);
 	}
 
 	/**
-	 * Apre il modal in modalità modifica per una spesa esistente
+	 * Apre il dettaglio (sola lettura) di una spesa nel tab Spese
 	 */
-	editExpense(expense: ActivityExpense, activityId: number) {
-		this.expenseActivityId.set(activityId);
-		this.expenseToEdit.set(expense);
-		this.showExpenseModal.set(true);
+	viewExpense(expense: ActivityExpense): void {
+		this.viewingExpense.set(
+			this.viewingExpense()?.id === expense.id ? null : expense
+		);
 	}
 
 	/**
-	 * Apre il modal in modalità modifica dal bottom sheet
+	 * Apre il dettaglio (sola lettura) di una spesa dal bottom sheet
 	 */
-	editExpenseFromSheet(expense: ActivityExpense) {
-		const activityId = this.expenseSheetActivityId();
-		if (!activityId) return;
-		this.closeExpenseSheet();
-		this.editExpense(expense, activityId);
+	viewExpenseFromSheet(expense: ActivityExpense): void {
+		this.viewingExpense.set(
+			this.viewingExpense()?.id === expense.id ? null : expense
+		);
 	}
 
 	/**
@@ -827,7 +828,6 @@ export class GroupDetailComponent implements OnInit {
 		const activityId = this.expenseSheetActivityId();
 		if (!activityId) return;
 		this.closeExpenseSheet();
-		this.expenseToEdit.set(null);
 		this.openExpenseModal(activityId);
 	}
 
@@ -839,7 +839,6 @@ export class GroupDetailComponent implements OnInit {
 		this.error.set(null);
 
 		const activityId = request.activityId;
-		const expenseIdToReplace = request.expenseIdToReplace;
 
 		const apiRequest = {
 			description: request.description,
@@ -856,51 +855,33 @@ export class GroupDetailComponent implements OnInit {
 			}))
 		};
 
-		const doCreate = () => {
-			this.activityService.addExpense(currentGroup.id, activityId, apiRequest as any).subscribe({
-				next: () => {
-					this.savingExpense.set(false);
-					this.closeExpenseModal();
-					this.loadActivities(currentGroup.id);
-					this.loadActivitiesFull();
-					// Ricarica il dettaglio spese dell'attività se è espansa nel tab Spese
-					if (this.selectedExpenseActivityId() === activityId) {
-						this.activityService.getExpenses(currentGroup.id, activityId).subscribe({
-							next: (expenses) => this.activityExpenses.set(expenses)
-						});
-					}
-					// Ricarica anche il bottom sheet se è aperto per la stessa attività
-					if (this.expenseSheetActivityId() === activityId) {
-						this.loadingExpenseSheet.set(true);
-						this.activityService.getExpenses(currentGroup.id, activityId).subscribe({
-							next: (expenses) => {
-								this.expenseSheetExpenses.set(expenses);
-								this.loadingExpenseSheet.set(false);
-							},
-							error: () => this.loadingExpenseSheet.set(false)
-						});
-					}
-				},
-				error: (err) => {
-					console.error('Error saving expense:', err);
-					this.savingExpense.set(false);
-					this.error.set('Errore durante il salvataggio della spesa: ' + (err.error?.message || err.message || 'Errore sconosciuto'));
+		this.activityService.addExpense(currentGroup.id, activityId, apiRequest as any).subscribe({
+			next: () => {
+				this.savingExpense.set(false);
+				this.closeExpenseModal();
+				this.loadActivities(currentGroup.id);
+				this.loadActivitiesFull();
+				if (this.selectedExpenseActivityId() === activityId) {
+					this.activityService.getExpenses(currentGroup.id, activityId).subscribe({
+						next: (expenses) => this.activityExpenses.set(expenses)
+					});
 				}
-			});
-		};
-
-		if (expenseIdToReplace) {
-			// Edit mode: delete old then create new
-			this.activityService.deleteExpense(currentGroup.id, activityId, expenseIdToReplace).subscribe({
-				next: () => doCreate(),
-				error: (err) => {
-					console.error('Error deleting old expense during edit:', err);
-					this.savingExpense.set(false);
-					this.error.set('Errore durante la modifica della spesa');
+				if (this.expenseSheetActivityId() === activityId) {
+					this.loadingExpenseSheet.set(true);
+					this.activityService.getExpenses(currentGroup.id, activityId).subscribe({
+						next: (expenses) => {
+							this.expenseSheetExpenses.set(expenses);
+							this.loadingExpenseSheet.set(false);
+						},
+						error: () => this.loadingExpenseSheet.set(false)
+					});
 				}
-			});
-		} else {
-			doCreate();
-		}
+			},
+			error: (err) => {
+				console.error('Error saving expense:', err);
+				this.savingExpense.set(false);
+				this.error.set('Errore durante il salvataggio della spesa: ' + (err.error?.message || err.message || 'Errore sconosciuto'));
+			}
+		});
 	}
 }

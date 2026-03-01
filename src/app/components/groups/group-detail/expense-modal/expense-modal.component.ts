@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GroupMember } from '../../../../models/group.model';
 import { MemberWithAmount, ExpenseRequest, PayerRequest, SplitRequest } from '../../../../models/expense.model';
-import { ActivityExpense } from '../../../../models/activity.model';
 import { PayersStepComponent } from '../payers-step/payers-step.component';
 import { SplitStepComponent } from '../split-step/split-step.component';
 
@@ -19,7 +18,6 @@ export class ExpenseModalComponent {
 	activityId = input.required<number>();
 	members = input.required<GroupMember[]>();
 	isOpen = input.required<boolean>();
-	expenseToEdit = input<ActivityExpense | null>(null); // null = create, set = edit
 
 	// Outputs
 	close = output<void>();
@@ -40,69 +38,21 @@ export class ExpenseModalComponent {
 
 	// Computed
 	totalAmount = computed(() => {
-		// Il totale è la somma di quanto hanno pagato i paganti
-		const payersMap = this.payers();
 		let total = 0;
-		for (const amount of payersMap.values()) {
-			total += amount;
-		}
+		for (const amount of this.payers().values()) total += amount;
 		return total;
 	});
 
-	canProceedToStep2 = computed(() => {
-		return this.description().trim() !== '' &&
-			this.totalAmount() > 0 &&
-			this.payersValid();
-	});
+	canProceedToStep2 = computed(() =>
+		this.description().trim() !== '' && this.totalAmount() > 0 && this.payersValid()
+	);
 
-	canSave = computed(() => {
-		return this.canProceedToStep2() && this.splitsValid();
-	});
-
-	// Computed: initial payers list for payers-step when editing
-	initialPayersForStep = computed<MemberWithAmount[]>(() => {
-		const expense = this.expenseToEdit();
-		if (!expense?.splits) return [];
-		return expense.splits
-			.filter(s => s.isPayer)
-			.map(s => ({
-				groupMemberId: s.groupMember.id,
-				userName: s.groupMember.user?.name ?? '',
-				amount: s.paidAmount ?? 0,
-				isPayer: true
-			}));
-	});
-
-	// Computed: initial splits list for split-step when editing
-	initialSplitsForStep = computed<MemberWithAmount[]>(() => {
-		const expense = this.expenseToEdit();
-		if (!expense?.splits) return [];
-		return expense.splits.map(s => ({
-			groupMemberId: s.groupMember.id,
-			userName: s.groupMember.user?.name ?? '',
-			amount: s.amount
-		}));
-	});
-
-	isEditMode = computed(() => this.expenseToEdit() !== null);
+	canSave = computed(() => this.canProceedToStep2() && this.splitsValid());
 
 	constructor() {
-		// Pre-fill form when editing an existing expense
-		effect(() => {
-			const expense = this.expenseToEdit();
-			if (expense && this.isOpen()) {
-				this.description.set(expense.description);
-				this.currency.set(expense.currency ?? 'EUR');
-				this.currentStep.set(1);
-				// Payers/splits are pre-filled via initialPayersForStep / initialSplitsForStep inputs
-			}
-		}, { allowSignalWrites: true });
-
 		// Reset form when modal closes
 		effect(() => {
-			if (!this.isOpen()) {
-				this.resetForm();
-			}
+			if (!this.isOpen()) this.resetForm();
 		}, { allowSignalWrites: true });
 	}
 
@@ -187,8 +137,7 @@ export class ExpenseModalComponent {
 			description: this.description(),
 			currency: this.currency(),
 			payers: payerRequests,
-			splits: splitRequests,
-			expenseIdToReplace: this.expenseToEdit()?.id ?? undefined
+			splits: splitRequests
 		};
 
 		this.save.emit(request);
