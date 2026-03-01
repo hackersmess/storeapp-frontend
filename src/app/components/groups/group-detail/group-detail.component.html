@@ -134,105 +134,136 @@
         <!-- Expenses Tab -->
         @if (activeTab() === 'expenses') {
           <div class="expenses-section">
-            @if (loadingExpensesTab()) {
-              <div class="loading-small">
-                <div class="spinner-sm"></div>
-                <p>Caricamento spese...</p>
-              </div>
-            } @else if (activitiesWithExpenses().length === 0) {
-              <div class="empty-state">
-                <ng-icon name="lucideWallet" size="48"></ng-icon>
-                <p>Nessuna spesa registrata</p>
-                <p class="text-muted">Apri un'attività dal calendario per aggiungere le spese</p>
-              </div>
-            } @else {
-              @for (activity of activitiesWithExpenses(); track activity.id) {
-                <!-- Card attività: click espande il dettaglio spese -->
-                <div
-                  class="expense-activity-card"
-                  [class.expanded]="selectedExpenseActivityId() === activity.id"
-                  (click)="selectExpenseActivity(activity.id)"
-                >
-                  <div class="expense-activity-header">
-                    <div class="expense-activity-info">
-                      <span class="expense-activity-icon">
-                        {{ activity.activityType === 'EVENT' ? '📍' : '✈️' }}
-                      </span>
-                      <div>
-                        <h3 class="expense-activity-name">{{ activity.name }}</h3>
-                        <span class="expense-activity-date">{{
-                          formatDate(activity.startDate)
-                        }}</span>
+
+            <!-- Sub-tab navigation -->
+            <div class="expenses-sub-tabs">
+              <button
+                class="sub-tab-btn"
+                [class.active]="expensesSubTab() === 'list'"
+                (click)="expensesSubTab.set('list')"
+              >
+                Spese
+              </button>
+              <button
+                class="sub-tab-btn"
+                [class.active]="expensesSubTab() === 'balances'"
+                (click)="expensesSubTab.set('balances')"
+              >
+                Saldi
+              </button>
+            </div>
+
+            <!-- ─── Sub-tab: Lista spese ─── -->
+            @if (expensesSubTab() === 'list') {
+              @if (loadingExpensesTab()) {
+                <div class="loading-small">
+                  <div class="spinner-sm"></div>
+                  <p>Caricamento spese...</p>
+                </div>
+              } @else if (activitiesWithExpenses().length === 0) {
+                <div class="empty-state">
+                  <ng-icon name="lucideWallet" size="48"></ng-icon>
+                  <p>Nessuna spesa registrata</p>
+                  <p class="text-muted">Apri un'attività dal calendario per aggiungere le spese</p>
+                </div>
+              } @else {
+                @for (activity of activitiesWithExpenses(); track activity.id) {
+                  <!-- Card attività: click espande il dettaglio spese -->
+                  <div
+                    class="expense-activity-card"
+                    [class.expanded]="selectedExpenseActivityId() === activity.id"
+                    (click)="selectExpenseActivity(activity.id)"
+                  >
+                    <div class="expense-activity-header">
+                      <div class="expense-activity-info">
+                        <span class="expense-activity-icon">
+                          {{ activity.activityType === 'EVENT' ? '📍' : '✈️' }}
+                        </span>
+                        <div>
+                          <h3 class="expense-activity-name">{{ activity.name }}</h3>
+                          <span class="expense-activity-date">{{
+                            formatDate(activity.startDate)
+                          }}</span>
+                        </div>
+                      </div>
+                      <div class="expense-total">
+                        <span class="expense-total-amount"
+                          >{{ activity.totalCost | number: '1.2-2' }} €</span
+                        >
+                        <span class="expense-total-label">totale</span>
+                        <ng-icon
+                          [name]="
+                            selectedExpenseActivityId() === activity.id
+                              ? 'lucideChevronUp'
+                              : 'lucideChevronDown'
+                          "
+                          size="16"
+                        ></ng-icon>
                       </div>
                     </div>
-                    <div class="expense-total">
-                      <span class="expense-total-amount"
-                        >{{ activity.totalCost | number: '1.2-2' }} €</span
-                      >
-                      <span class="expense-total-label">totale</span>
-                      <ng-icon
-                        [name]="
-                          selectedExpenseActivityId() === activity.id
-                            ? 'lucideChevronUp'
-                            : 'lucideChevronDown'
-                        "
-                        size="16"
-                      ></ng-icon>
-                    </div>
-                  </div>
 
-                  <!-- Dettaglio spese espandibile -->
-                  @if (selectedExpenseActivityId() === activity.id) {
-                    <div class="expense-detail" (click)="$event.stopPropagation()">
-                      @if (loadingActivityExpenses()) {
-                        <div class="loading-small">
-                          <div class="spinner-sm"></div>
-                        </div>
-                      } @else {
-                        @for (expense of activityExpenses(); track expense.id) {
-                          <div class="expense-item">
-                            <div class="expense-item-info">
-                              <span class="expense-item-desc">{{ expense.description }}</span>
-                            </div>
-                            <div class="expense-item-right">
-                              <span class="expense-item-amount"
-                                >{{ expense.amount | number: '1.2-2' }} {{ expense.currency }}</span
-                              >
-                              <div class="expense-item-actions">
-                                <button
-                                  class="btn-expense-action btn-edit"
-                                  (click)="editExpense(expense, activity.id)"
-                                  title="Modifica"
+                    <!-- Dettaglio spese espandibile -->
+                    @if (selectedExpenseActivityId() === activity.id) {
+                      <div class="expense-detail" (click)="$event.stopPropagation()">
+                        @if (loadingActivityExpenses()) {
+                          <div class="loading-small">
+                            <div class="spinner-sm"></div>
+                          </div>
+                        } @else {
+                          @for (expense of activityExpenses(); track expense.id) {
+                            <div class="expense-item">
+                              <div class="expense-item-info">
+                                <span class="expense-item-desc">{{ expense.description }}</span>
+                              </div>
+                              <div class="expense-item-right">
+                                <span class="expense-item-amount"
+                                  >{{ expense.amount | number: '1.2-2' }} {{ expense.currency }}</span
                                 >
-                                  <ng-icon name="lucideEdit" size="14"></ng-icon>
-                                </button>
-                                <button
-                                  class="btn-expense-action btn-delete"
-                                  (click)="confirmDeleteExpense(expense, activity.id)"
-                                  title="Elimina"
-                                >
-                                  <ng-icon name="lucideTrash2" size="14"></ng-icon>
-                                </button>
+                                <div class="expense-item-actions">
+                                  <button
+                                    class="btn-expense-action btn-edit"
+                                    (click)="editExpense(expense, activity.id)"
+                                    title="Modifica"
+                                  >
+                                    <ng-icon name="lucideEdit" size="14"></ng-icon>
+                                  </button>
+                                  <button
+                                    class="btn-expense-action btn-delete"
+                                    (click)="confirmDeleteExpense(expense, activity.id)"
+                                    title="Elimina"
+                                  >
+                                    <ng-icon name="lucideTrash2" size="14"></ng-icon>
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          }
+                          <button class="btn-add-expense" (click)="openExpenseModal(activity.id)">
+                            <ng-icon name="lucidePlus" size="16"></ng-icon>
+                            Aggiungi spesa
+                          </button>
                         }
-                        <button class="btn-add-expense" (click)="openExpenseModal(activity.id)">
-                          <ng-icon name="lucidePlus" size="16"></ng-icon>
-                          Aggiungi spesa
-                        </button>
-                      }
-                    </div>
-                  }
+                      </div>
+                    }
+                  </div>
+                }
+                <div class="expenses-grand-total">
+                  <span>Totale gruppo</span>
+                  <span class="grand-total-amount"
+                    >{{ groupExpensesTotal() | number: '1.2-2' }} €</span
+                  >
                 </div>
               }
-              <div class="expenses-grand-total">
-                <span>Totale gruppo</span>
-                <span class="grand-total-amount"
-                  >{{ groupExpensesTotal() | number: '1.2-2' }} €</span
-                >
-              </div>
             }
+
+            <!-- ─── Sub-tab: Saldi ─── -->
+            @if (expensesSubTab() === 'balances') {
+              <app-expense-settlement
+                [groupId]="group()!.id"
+                [refreshTrigger]="settlementRefreshTrigger()"
+              />
+            }
+
           </div>
         }
 
@@ -303,11 +334,13 @@
       [show]="showActivityModal()"
       [activity]="activityToEdit()"
       [prefilledDate]="selectedDate()"
+      [groupDateRange]="
+        group() ? { start: group()!.vacationStartDate, end: group()!.vacationEndDate } : null
+      "
       [loading]="savingActivity()"
       [members]="group()?.members || []"
       (close)="closeActivityModal()"
       (save)="onSaveActivity($event)"
-      (manageExpenses)="openExpenseModal($event)"
     >
     </app-activity-modal>
 

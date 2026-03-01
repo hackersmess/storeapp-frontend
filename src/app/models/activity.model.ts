@@ -452,3 +452,36 @@ export function getTransportModeIcon(mode: TransportMode): string {
 	};
 	return icons[mode] || 'lucideMapPin';
 }
+
+// ==================== SETTLEMENT MODELS ====================
+
+/** Bilancio di un membro (quanto ha pagato vs quanto doveva) */
+export interface MemberBalance {
+	groupMemberId: number;
+	memberName: string;
+	memberAvatarUrl?: string;
+	totalPaid: number;   // quanto ha anticipato
+	totalOwed: number;   // la sua quota totale
+	balance: number;     // totalPaid - totalOwed  (+ = creditore, - = debitore)
+}
+
+/** Transazione di rimborso ottimizzata: "from deve pagare amount a to" */
+export interface SettlementTransaction {
+	fromMemberId: number;
+	fromMemberName: string;
+	fromMemberAvatarUrl?: string;
+	toMemberId: number;
+	toMemberName: string;
+	toMemberAvatarUrl?: string;
+	amount: number;
+}
+
+/** Risposta completa dell'endpoint settlement */
+export interface GroupExpenseSettlement {
+	groupId: number;
+	totalExpenses: number;
+	expenseCount: number;
+	balances: MemberBalance[];
+	settlements: SettlementTransaction[];
+	transactionCount: number;
+}

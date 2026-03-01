@@ -286,6 +286,41 @@
   gap: 12px;
   min-height: 300px;
 
+  // ─── Sub-tab navigation ───
+  .expenses-sub-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--color-bg-secondary, #141414);
+    border: 1px solid var(--color-border, #2a2a2a);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+    margin-bottom: 4px;
+
+    .sub-tab-btn {
+      padding: 7px 20px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--color-text-secondary, #888);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover:not(.active) {
+        background: var(--color-bg-elevated, #1f1f1f);
+        color: var(--color-text-primary, #fff);
+      }
+
+      &.active {
+        background: var(--color-bg-elevated, #1f1f1f);
+        color: var(--color-text-primary, #fff);
+        font-weight: 600;
+      }
+    }
+  }
+
   .loading-small {
     display: flex;
     flex-direction: column;

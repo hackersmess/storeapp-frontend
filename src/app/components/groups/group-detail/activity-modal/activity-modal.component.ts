@@ -19,7 +19,8 @@ import {
 	lucideFlag,
 	lucideArmchair,
 	lucideRuler,
-	lucideGlobe
+	lucideGlobe,
+	lucideWallet
 } from '@ng-icons/lucide';
 import { Activity, EventRequest, TripRequest, ActivityType, EventCategory, TransportMode, isEvent, isTrip, getEventCategoryLabel, getTransportModeLabel } from '../../../../models/activity.model';
 import { GroupMember } from '../../../../models/group.model';
@@ -48,7 +49,8 @@ import { eventDateTimeValidator, tripDateTimeValidator } from '../../../../share
 		lucideFlag,
 		lucideArmchair,
 		lucideRuler,
-		lucideGlobe
+		lucideGlobe,
+		lucideWallet
 	})]
 })
 export class ActivityModalComponent {
@@ -58,13 +60,13 @@ export class ActivityModalComponent {
 	show = input.required<boolean>();
 	activity = input<Activity | null>(null);
 	prefilledDate = input<Date | null>(null);
+	groupDateRange = input<{ start: string; end: string } | null>(null);
 	loading = input<boolean>(false);
 	members = input<GroupMember[]>([]);
 
 	// Output events
 	close = output<void>();
 	save = output<EventRequest | TripRequest>();
-	manageExpenses = output<number>(); // activity ID
 
 	// Internal signals
 	activityForm!: FormGroup;
@@ -77,6 +79,15 @@ export class ActivityModalComponent {
 	isEventType = computed(() => this.selectedActivityType() === 'EVENT');
 	isTripType = computed(() => this.selectedActivityType() === 'TRIP');
 	noParticipantsSelected = computed(() => this.selectedParticipantIds().length === 0);
+	/** True se l'attività in modifica ha già spese: blocca la sezione partecipanti */
+	hasExpenses = computed(() => {
+		const a = this.activity();
+		return this.isEditMode() && !!a && (a.totalCost ?? 0) > 0;
+	});
+	/** Min date per i campi data (inizio itinerario gruppo) */
+	minDate = computed(() => this.groupDateRange()?.start ?? null);
+	/** Max date per i campi data (fine itinerario gruppo) */
+	maxDate = computed(() => this.groupDateRange()?.end ?? null);
 
 	// Expose enums to template
 	readonly EventCategory = EventCategory;
@@ -192,7 +203,8 @@ export class ActivityModalComponent {
 				if (this.selectedActivityType() === 'TRIP') {
 					this.activityForm.patchValue({ departureDate: formatted });
 				} else {
-					this.activityForm.patchValue({ startDate: formatted });
+					// Imposta sia data inizio che data fine con il giorno cliccato
+					this.activityForm.patchValue({ startDate: formatted, endDate: formatted });
 				}
 			}
 		});
@@ -315,7 +327,7 @@ export class ActivityModalComponent {
 			if (this.selectedActivityType() === 'TRIP') {
 				this.activityForm.patchValue({ departureDate: formatted });
 			} else {
-				this.activityForm.patchValue({ startDate: formatted });
+				this.activityForm.patchValue({ startDate: formatted, endDate: formatted });
 			}
 		}
 		// Set default values
@@ -340,7 +352,7 @@ export class ActivityModalComponent {
 				if (type === 'TRIP') {
 					this.activityForm.patchValue({ departureDate: formatted });
 				} else {
-					this.activityForm.patchValue({ startDate: formatted });
+					this.activityForm.patchValue({ startDate: formatted, endDate: formatted });
 				}
 			}
 		}
@@ -409,13 +421,6 @@ export class ActivityModalComponent {
 				participantIds: this.selectedParticipantIds().length > 0 ? this.selectedParticipantIds() : undefined
 			};
 			this.save.emit(request);
-		}
-	}
-
-	onManageExpenses(): void {
-		const currentActivity = this.activity();
-		if (currentActivity) {
-			this.manageExpenses.emit(currentActivity.id);
 		}
 	}
 

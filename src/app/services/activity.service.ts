@@ -13,7 +13,8 @@ import {
 	ActivityParticipantRequest,
 	ActivityExpense,
 	ActivityExpenseRequest,
-	UpdateParticipantStatusRequest
+	UpdateParticipantStatusRequest,
+	GroupExpenseSettlement
 } from '../models/activity.model';
 
 /**
@@ -221,6 +222,16 @@ export class ActivityService {
 	deleteExpense(groupId: number, activityId: number, expenseId: number): Observable<void> {
 		return this.http.delete<void>(
 			`${this.apiUrl}/groups/${groupId}/activities/${activityId}/expenses/${expenseId}`
+		);
+	}
+
+	/**
+	 * Calcola il settlement ottimizzato delle spese del gruppo.
+	 * GET /api/groups/{groupId}/expenses/settlement
+	 */
+	getExpenseSettlement(groupId: number): Observable<GroupExpenseSettlement> {
+		return this.http.get<GroupExpenseSettlement>(
+			`${this.apiUrl}/groups/${groupId}/expenses/settlement`
 		);
 	}
 

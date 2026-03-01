@@ -7,6 +7,7 @@ import { Group, GroupMember, GroupRole, AddMemberRequest, LeaveGroupStatus } fro
 import { User } from '../../../models/user.model';
 import { ActivityService } from '../../../services/activity.service';
 import { ActivityCalendar, ActivityRequest, Activity, ActivityExpense, EventRequest, TripRequest, isEvent, isTrip } from '../../../models/activity.model';
+import { ExpenseSettlementComponent } from './expense-settlement/expense-settlement.component';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
@@ -54,7 +55,8 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		ActivityModalComponent,
 		ExpenseModalComponent,
 		AddMemberModalComponent,
-		MembersListComponent
+		MembersListComponent,
+		ExpenseSettlementComponent
 	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
@@ -155,6 +157,11 @@ export class GroupDetailComponent implements OnInit {
 	// Attività complete (con totalCost) per il tab Spese
 	activitiesFull = signal<Activity[]>([]);
 	loadingExpensesTab = signal(false);
+
+	// Sub-tab interno alla sezione Spese: 'list' = lista spese per attività, 'balances' = saldi/riepilogo
+	expensesSubTab = signal<'list' | 'balances'>('list');
+	// Incrementare per forzare il refresh di ExpenseSettlementComponent
+	settlementRefreshTrigger = signal(0);
 
 	// Computed: attività con spese (totalCost > 0) per il tab Spese
 	activitiesWithExpenses = computed(() =>
@@ -644,6 +651,8 @@ export class GroupDetailComponent implements OnInit {
 			next: (activities) => {
 				this.activitiesFull.set(activities);
 				this.loadingExpensesTab.set(false);
+				// Aggiorna i saldi ogni volta che le spese cambiano
+				this.settlementRefreshTrigger.update(v => v + 1);
 			},
 			error: () => {
 				this.loadingExpensesTab.set(false);

@@ -80,14 +80,28 @@
                 <ng-icon name="lucideCalendar" size="16"></ng-icon>
                 <span>Data inizio</span>
               </label>
-              <input type="date" class="form-input" formControlName="startDate" required />
+              <input
+                type="date"
+                class="form-input"
+                formControlName="startDate"
+                required
+                [min]="minDate() ?? ''"
+                [max]="maxDate() ?? ''"
+              />
             </div>
             <div class="form-group">
               <label class="form-label required">
                 <ng-icon name="lucideCalendar" size="16"></ng-icon>
                 <span>Data fine</span>
               </label>
-              <input type="date" class="form-input" formControlName="endDate" required />
+              <input
+                type="date"
+                class="form-input"
+                formControlName="endDate"
+                required
+                [min]="minDate() ?? ''"
+                [max]="maxDate() ?? ''"
+              />
             </div>
           </div>
           <div class="form-row">
@@ -139,6 +153,8 @@
                 required
                 [readOnly]="!!prefilledDate()"
                 [class.readonly]="!!prefilledDate()"
+                [min]="minDate() ?? ''"
+                [max]="maxDate() ?? ''"
               />
             </div>
             <div class="form-group">
@@ -146,7 +162,14 @@
                 <ng-icon name="lucideCalendar" size="16"></ng-icon>
                 <span>Data arrivo</span>
               </label>
-              <input type="date" class="form-input" formControlName="arrivalDate" required />
+              <input
+                type="date"
+                class="form-input"
+                formControlName="arrivalDate"
+                required
+                [min]="minDate() ?? ''"
+                [max]="maxDate() ?? ''"
+              />
             </div>
           </div>
           <div class="form-row">
@@ -211,7 +234,7 @@
               <ng-icon name="lucideUsers" size="16"></ng-icon>
               <span>Partecipanti</span>
             </h4>
-            @if (members().length > 0) {
+            @if (members().length > 0 && !hasExpenses()) {
               <div class="section-actions">
                 <button
                   type="button"
@@ -234,7 +257,33 @@
             }
           </div>
 
-          @if (members().length > 0) {
+          @if (hasExpenses()) {
+            <div class="participants-locked-notice">
+              <ng-icon name="lucideWallet" size="16"></ng-icon>
+              <span
+                >I partecipanti non possono essere modificati perché esistono già spese registrate
+                per questa attività. Rimuovi prima tutte le spese per modificarli.</span
+              >
+            </div>
+            <div class="participants-list participants-list--readonly">
+              @for (member of members(); track member.id) {
+                <div
+                  class="participant-item participant-item--readonly"
+                  [class.is-participant]="isParticipantSelected(member.id)"
+                >
+                  <img
+                    [src]="member.user.avatarUrl || '/assets/default-avatar.png'"
+                    [alt]="member.user.name"
+                    class="participant-avatar"
+                  />
+                  <span class="participant-name">{{ member.user.name }}</span>
+                  @if (isParticipantSelected(member.id)) {
+                    <span class="participant-badge">✓</span>
+                  }
+                </div>
+              }
+            </div>
+          } @else if (members().length > 0) {
             <div class="participants-list">
               @for (member of members(); track member.id) {
                 <label class="participant-item">
@@ -445,16 +494,6 @@
               placeholder="PNR: ABC123"
               maxlength="255"
             />
-          </div>
-        }
-
-        <!-- Gestione spese (solo in modalità edit) -->
-        @if (isEditMode()) {
-          <div class="form-group">
-            <button type="button" class="btn btn-expense" (click)="onManageExpenses()">
-              <ng-icon name="lucideDollarSign" size="16"></ng-icon>
-              <span>Gestisci spese</span>
-            </button>
           </div>
         }
 
