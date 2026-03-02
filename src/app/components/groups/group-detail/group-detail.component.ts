@@ -41,6 +41,7 @@ import { ExpenseModalComponent } from './expense-modal/expense-modal.component';
 import { AddMemberModalComponent } from './add-member-modal/add-member-modal.component';
 import { MembersListComponent } from '../shared/members-list/members-list.component';
 import { ExpenseRequest } from '../../../models/expense.model';
+import { ActivityDetailSheetComponent } from './activity-detail-sheet/activity-detail-sheet.component';
 
 @Component({
 	selector: 'app-group-detail',
@@ -57,7 +58,8 @@ import { ExpenseRequest } from '../../../models/expense.model';
 		ExpenseModalComponent,
 		AddMemberModalComponent,
 		MembersListComponent,
-		ExpenseSettlementComponent
+		ExpenseSettlementComponent,
+		ActivityDetailSheetComponent
 	],
 	templateUrl: './group-detail.component.html',
 	styleUrls: ['./group-detail.component.scss'],
@@ -111,6 +113,10 @@ export class GroupDetailComponent implements OnInit {
 	showActivityModal = signal(false);
 	activityToEdit = signal<Activity | null>(null);
 	savingActivity = signal(false);
+
+	// Detail sheet (sola lettura, aperto dal bottone "Dettaglio" nel calendario)
+	showDetailSheet = signal(false);
+	detailActivity = signal<Activity | null>(null);
 
 	// Collapsible sections (collapsed by default)
 	groupInfoCollapsed = signal(true);
@@ -545,7 +551,55 @@ export class GroupDetailComponent implements OnInit {
 				this.error.set('Errore nel caricamento dei dettagli');
 			}
 		});
-	} onSaveActivity(request: EventRequest | TripRequest) {
+	}
+
+	onActivityDetail(activity: ActivityCalendar) {
+		const currentGroup = this.group();
+		if (!currentGroup) return;
+
+		this.activityService.getActivity(currentGroup.id, activity.id).subscribe({
+			next: (fullActivity) => {
+				this.activityService.getParticipants(currentGroup.id, activity.id).subscribe({
+					next: (participants) => {
+						fullActivity.participants = participants;
+						this.detailActivity.set(fullActivity);
+						this.showDetailSheet.set(true);
+					},
+					error: () => {
+						this.detailActivity.set(fullActivity);
+						this.showDetailSheet.set(true);
+					}
+				});
+			},
+			error: (err) => {
+				console.error('Error loading activity details:', err);
+				this.error.set('Errore nel caricamento dei dettagli');
+			}
+		});
+	}
+
+	closeDetailSheet() {
+		this.showDetailSheet.set(false);
+		this.detailActivity.set(null);
+	}
+
+	onDetailEdit(activity: Activity) {
+		this.closeDetailSheet();
+		this.activityToEdit.set(activity);
+		this.showActivityModal.set(true);
+	}
+
+	onDetailDelete(activityId: number) {
+		this.closeDetailSheet();
+		this.onDeleteActivity(activityId);
+	}
+
+	onDetailAddExpense(activityId: number) {
+		this.closeDetailSheet();
+		this.openExpenseSheet(activityId);
+	}
+
+	onSaveActivity(request: EventRequest | TripRequest) {
 		const currentGroup = this.group();
 		if (!currentGroup) return;
 

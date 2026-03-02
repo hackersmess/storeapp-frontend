@@ -28,7 +28,14 @@
             <div class="no-activities">Nessuna attività</div>
           } @else {
             @for (activity of day.activities; track activity.id) {
-              <div class="activity-item">
+              <div
+                class="activity-item"
+                (click)="onActivityDetail(activity, $event)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="onActivityDetail(activity, $event)"
+                title="Vedi dettaglio"
+              >
                 <div class="activity-main">
                   <div class="activity-content">
                     <div class="activity-title">{{ activity.title }}</div>

@@ -1,0 +1,196 @@
+<div class="sheet-backdrop" (click)="onClose()"></div>
+
+<div class="activity-detail-sheet" role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+
+  <!-- Header -->
+  <div class="sheet-header" [class.is-trip]="isTrip(activity())">
+    <div class="header-top">
+      <span class="type-badge">
+        @if (isEvent(activity())) {
+          <ng-icon name="lucideTag" size="13"></ng-icon>
+          {{ getCategoryLabel(asEvent().category) }}
+        } @else {
+          <ng-icon [name]="getTransportIcon(asTrip().transportMode)" size="13"></ng-icon>
+          {{ getTransportLabel(asTrip().transportMode) }}
+        }
+      </span>
+      <button class="close-btn" (click)="onClose()" type="button" aria-label="Chiudi">
+        <ng-icon name="lucideX" size="20"></ng-icon>
+      </button>
+    </div>
+
+    <h2 class="activity-title">{{ activity().name }}</h2>
+
+    <div class="header-meta">
+      <span class="status-chip" [class.completed]="activity().isCompleted">
+        <ng-icon [name]="getStatusIcon()" size="13"></ng-icon>
+        {{ getStatusLabel() }}
+      </span>
+      @if (activity().totalCost) {
+        <span class="cost-chip">
+          <ng-icon name="lucideDollarSign" size="13"></ng-icon>
+          {{ formatCurrency(activity().totalCost) }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="sheet-body">
+    <!-- DATE / ORARI -->
+    <div class="detail-section">
+      <div class="section-icon"><ng-icon name="lucideCalendar" size="16"></ng-icon></div>
+      <div class="section-content">
+        @if (isEvent(activity())) {
+          <div class="detail-label">Data</div>
+          <div class="detail-value">{{ formatDate(activity().startDate) }}</div>
+          @if (isMultiDay()) {
+            <div class="detail-sub">fino al {{ formatDateShort(activity().endDate) }}</div>
+          }
+          @if (activity().startTime || activity().endTime) {
+            <div class="detail-times">
+              <ng-icon name="lucideClock" size="13"></ng-icon>
+              {{ formatTime(activity().startTime) }}
+              @if (activity().endTime) {
+                – {{ formatTime(activity().endTime) }}
+              }
+            </div>
+          }
+          @if (asEvent().reservationTime) {
+            <div class="detail-sub">Prenotazione: {{ formatTime(asEvent().reservationTime) }}</div>
+          }
+        } @else {
+          <!-- TRIP -->
+          <div class="detail-label">Partenza</div>
+          <div class="detail-value">{{ formatDate(asTrip().departureDate) }}</div>
+          @if (asTrip().departureTime) {
+            <div class="detail-times">
+              <ng-icon name="lucideClock" size="13"></ng-icon>
+              {{ formatTime(asTrip().departureTime) }}
+            </div>
+          }
+          @if (asTrip().arrivalDate) {
+            <div class="detail-label" style="margin-top: 0.5rem">Arrivo</div>
+            <div class="detail-value">{{ formatDate(asTrip().arrivalDate) }}</div>
+            @if (asTrip().arrivalTime) {
+              <div class="detail-times">
+                <ng-icon name="lucideClock" size="13"></ng-icon>
+                {{ formatTime(asTrip().arrivalTime) }}
+              </div>
+            }
+          }
+        }
+      </div>
+    </div>
+
+    <!-- LOCATION / ROUTE -->
+    @if (isEvent(activity()) && asEvent().location) {
+      <div class="detail-section">
+        <div class="section-icon"><ng-icon name="lucideMapPin" size="16"></ng-icon></div>
+        <div class="section-content">
+          <div class="detail-label">Luogo</div>
+          <div class="detail-value">{{ asEvent().location!.name }}</div>
+          @if (asEvent().location!.address) {
+            <div class="detail-sub">{{ asEvent().location!.address }}</div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (isTrip(activity()) && (asTrip().origin || asTrip().destination)) {
+      <div class="detail-section">
+        <div class="section-icon"><ng-icon name="lucideMapPin" size="16"></ng-icon></div>
+        <div class="section-content">
+          <div class="trip-route">
+            <div class="route-point">
+              <div class="detail-label">Da</div>
+              <div class="detail-value">{{ asTrip().origin?.name ?? '—' }}</div>
+            </div>
+            <ng-icon name="lucideArrowRight" size="18" class="route-arrow"></ng-icon>
+            <div class="route-point">
+              <div class="detail-label">A</div>
+              <div class="detail-value">{{ asTrip().destination?.name ?? '—' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- DESCRIZIONE -->
+    @if (activity().description) {
+      <div class="detail-section">
+        <div class="section-icon"><ng-icon name="lucideTag" size="16"></ng-icon></div>
+        <div class="section-content">
+          <div class="detail-label">Descrizione</div>
+          <div class="detail-value detail-description">{{ activity().description }}</div>
+        </div>
+      </div>
+    }
+
+    <!-- PRENOTAZIONE -->
+    @if (isEvent(activity()) && (asEvent().bookingReference || asEvent().bookingUrl)) {
+      <div class="detail-section">
+        <div class="section-icon"><ng-icon name="lucideTag" size="16"></ng-icon></div>
+        <div class="section-content">
+          @if (asEvent().bookingReference) {
+            <div class="detail-label">Numero prenotazione</div>
+            <div class="detail-value detail-mono">{{ asEvent().bookingReference }}</div>
+          }
+          @if (asEvent().bookingUrl) {
+            <a class="booking-link" [href]="asEvent().bookingUrl" target="_blank" rel="noopener">
+              <ng-icon name="lucideExternalLink" size="14"></ng-icon>
+              Apri link prenotazione
+            </a>
+          }
+        </div>
+      </div>
+    }
+
+    @if (isTrip(activity()) && asTrip().bookingReference) {
+      <div class="detail-section">
+        <div class="section-icon"><ng-icon name="lucideTag" size="16"></ng-icon></div>
+        <div class="section-content">
+          <div class="detail-label">Numero prenotazione</div>
+          <div class="detail-value detail-mono">{{ asTrip().bookingReference }}</div>
+        </div>
+      </div>
+    }
+
+    <!-- PARTECIPANTI -->
+    <div class="detail-section">
+      <div class="section-icon"><ng-icon name="lucideUsers" size="16"></ng-icon></div>
+      <div class="section-content">
+        <div class="detail-label">Partecipanti</div>
+        <div class="detail-sub">{{ getParticipantsSummary() }}</div>
+        @if (activity().participants && activity().participants!.length > 0) {
+          <div class="participants-list">
+            @for (p of activity().participants!; track p.id) {
+              <span class="participant-chip" [class]="'status-' + p.status.toLowerCase()">
+                {{ p.groupMember?.user?.name ?? 'Membro' }}
+                <span class="chip-status">{{ getParticipantStatusLabel(p.status) }}</span>
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Azioni -->
+  <div class="sheet-actions">
+    <button class="btn-action btn-expense" (click)="onAddExpense()" type="button">
+      <ng-icon name="lucideDollarSign" size="16"></ng-icon>
+      Aggiungi spesa
+    </button>
+    @if (canEdit()) {
+      <button class="btn-action btn-edit" (click)="onEdit()" type="button">
+        <ng-icon name="lucidePencil" size="16"></ng-icon>
+        Modifica
+      </button>
+      <button class="btn-action btn-delete" (click)="onDelete()" type="button">
+        <ng-icon name="lucideTrash2" size="16"></ng-icon>
+      </button>
+    }
+  </div>
+</div>

@@ -37,6 +37,7 @@ export class GroupCalendarComponent {
 	// Output events
 	dateSelected = output<Date>();
 	activityClick = output<ActivityCalendar>();
+	activityDetail = output<ActivityCalendar>();
 	createActivity = output<Date>();
 	addExpense = output<number>(); // activity ID
 	deleteActivity = output<number>(); // activity ID
@@ -100,6 +101,11 @@ export class GroupCalendarComponent {
 	onActivityClick(activity: ActivityCalendar, event: Event): void {
 		event.stopPropagation();
 		this.activityClick.emit(activity);
+	}
+
+	onActivityDetail(activity: ActivityCalendar, event: Event): void {
+		event.stopPropagation();
+		this.activityDetail.emit(activity);
 	}
 
 	onCreateActivity(day: CalendarDay, event: Event): void {

@@ -119,11 +119,12 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  cursor: pointer;
 
   &:hover {
     background: var(--color-bg-hover);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: var(--color-border-focus);
+    border-color: var(--color-accent);
     transform: translateY(-1px);
   }
 

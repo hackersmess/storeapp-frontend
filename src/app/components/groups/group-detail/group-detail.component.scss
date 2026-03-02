@@ -2,6 +2,13 @@
 .group-detail-container {
   min-height: 100vh;
   background: var(--color-bg-primary);
+
+  // Quando il detail sheet è aperto, sfoca tutto il contenuto della pagina
+  &.detail-sheet-open > *:not(app-activity-detail-sheet) {
+    filter: blur(4px);
+    transition: filter 0.2s ease;
+    pointer-events: none;
+  }
 }
 
 // ==================== LOADING / ERROR ====================

@@ -1,4 +1,4 @@
-<div class="group-detail-container">
+<div class="group-detail-container" [class.detail-sheet-open]="showDetailSheet()">
   @if (loading()) {
     <div class="loading">
       <div class="spinner"></div>
@@ -114,6 +114,7 @@
                 [selectedDate]="selectedDate()"
                 (dateSelected)="onDateSelected($event)"
                 (activityClick)="onActivityClick($event)"
+                (activityDetail)="onActivityDetail($event)"
                 (createActivity)="onAddActivity($event)"
                 (addExpense)="openExpenseSheet($event)"
                 (deleteActivity)="onDeleteActivity($event)"
@@ -740,5 +741,17 @@
         </div>
       </div>
     }
+  }
+
+  <!-- ============ ACTIVITY DETAIL SHEET (sola lettura) ============ -->
+  @if (showDetailSheet() && detailActivity()) {
+    <app-activity-detail-sheet
+      [activity]="detailActivity()!"
+      [canEdit]="isAdmin()"
+      (close)="closeDetailSheet()"
+      (edit)="onDetailEdit($event)"
+      (delete)="onDetailDelete($event)"
+      (addExpense)="onDetailAddExpense($event)"
+    ></app-activity-detail-sheet>
   }
 </div>
