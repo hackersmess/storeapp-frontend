@@ -235,6 +235,22 @@ export class ActivityService {
 		);
 	}
 
+	/**
+	 * Registra un pagamento di saldo tra due membri.
+	 * POST /api/groups/{groupId}/expenses/settle
+	 */
+	recordSettlement(groupId: number, request: {
+		fromMemberId: number;
+		toMemberId: number;
+		amount: number;
+		currency?: string;
+		note?: string;
+	}): Observable<void> {
+		return this.http.post<void>(
+			`${this.apiUrl}/groups/${groupId}/expenses/settle`, request
+		);
+	}
+
 	// ================== Reordering ==================
 
 	/**

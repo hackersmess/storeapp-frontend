@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -49,6 +49,16 @@ export class GroupFormComponent implements OnInit {
 	// Controlla se l'utente è admin del gruppo
 	private currentUserRole: GroupRole | null = null;
 
+	/** Validator a livello di form: end date deve essere >= start date */
+	private dateRangeValidator: ValidatorFn = (form: AbstractControl): ValidationErrors | null => {
+		const start = form.get('vacationStartDate')?.value;
+		const end = form.get('vacationEndDate')?.value;
+		if (start && end && end < start) {
+			return { dateRangeInvalid: true };
+		}
+		return null;
+	};
+
 	ngOnInit() {
 		this.initForm();
 		this.setupSearch();
@@ -66,10 +76,20 @@ export class GroupFormComponent implements OnInit {
 		this.groupForm = this.fb.group({
 			name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
 			description: ['', [Validators.maxLength(2000)]],
-			vacationStartDate: ['', Validators.required], // OBBLIGATORIO per il calendario itinerario
-			vacationEndDate: ['', Validators.required],   // OBBLIGATORIO per il calendario itinerario
+			vacationStartDate: ['', Validators.required],
+			vacationEndDate: ['', Validators.required],
 			coverImageUrl: ['', [Validators.maxLength(500)]],
 			memberSearch: ['']
+		}, { validators: this.dateRangeValidator });
+
+		// Quando cambia la data inizio, rivalida la data fine e la marca come touched
+		// così l'errore di range appare subito se la fine è già compilata
+		this.groupForm.get('vacationStartDate')!.valueChanges.subscribe(() => {
+			const endControl = this.groupForm.get('vacationEndDate')!;
+			if (endControl.value) {
+				endControl.markAsTouched();
+				endControl.updateValueAndValidity();
+			}
 		});
 	}
 

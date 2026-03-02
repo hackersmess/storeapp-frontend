@@ -78,6 +78,15 @@
     @if (settlement()!.settlements.length > 0) {
       <section class="settlement-section">
         <h4 class="section-title">Come saldare</h4>
+
+        <!-- Banner successo rimborso -->
+        @if (settleSuccess()) {
+          <div class="settle-success-banner">
+            <ng-icon name="lucideCheckCircle" size="16" />
+            <span>{{ settleSuccess() }}</span>
+          </div>
+        }
+
         <div class="transactions-list">
           @for (tx of settlement()!.settlements; track $index) {
             <div class="transaction-row">
@@ -110,6 +119,16 @@
                 </div>
                 <span class="tx-name">{{ tx.toMemberName }}</span>
               </div>
+
+              <!-- Pulsante registra pagamento -->
+              <button
+                class="btn-settle"
+                (click)="openSettleModal(tx)"
+                title="Registra pagamento avvenuto"
+              >
+                <ng-icon name="lucideHandCoins" size="15" />
+                <span>Registra</span>
+              </button>
             </div>
           }
         </div>
@@ -125,3 +144,17 @@
     }
   }
 </div>
+
+<!-- ═══ Modale di conferma rimborso ═══ -->
+<app-confirm-dialog
+  [show]="!!settleModal()"
+  title="Registra rimborso"
+  [message]="settleModalMessage"
+  confirmText="Conferma pagamento"
+  cancelText="Annulla"
+  confirmButtonClass="btn-success"
+  [loading]="settling()"
+  [errorMessage]="settleError()"
+  (confirm)="confirmSettle()"
+  (cancel)="closeSettleModal()"
+/>

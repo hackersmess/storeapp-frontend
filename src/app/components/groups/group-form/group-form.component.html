@@ -84,11 +84,24 @@
 
           <div class="form-group">
             <label for="vacationEndDate">Data Fine <span class="required">*</span></label>
-            <input id="vacationEndDate" type="date" formControlName="vacationEndDate" required />
+            <input
+              id="vacationEndDate"
+              type="date"
+              formControlName="vacationEndDate"
+              [min]="groupForm.get('vacationStartDate')?.value"
+              required
+            />
             @if (
               groupForm.get('vacationEndDate')?.invalid && groupForm.get('vacationEndDate')?.touched
             ) {
               <div class="error-message">La data di fine è obbligatoria</div>
+            }
+            @if (
+              groupForm.hasError('dateRangeInvalid') && groupForm.get('vacationEndDate')?.touched
+            ) {
+              <div class="error-message">
+                La data di fine deve essere uguale o successiva alla data di inizio
+              </div>
             }
           </div>
         </div>

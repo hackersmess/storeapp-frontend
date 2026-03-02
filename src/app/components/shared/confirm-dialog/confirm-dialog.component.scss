@@ -149,6 +149,17 @@
       }
     }
 
+    &.btn-success {
+      background: #3ecf8e;
+      color: #0a1a12;
+
+      &:hover:not(:disabled) {
+        background: #2db878;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(62, 207, 142, 0.3);
+      }
+    }
+
     .spinner-small {
       width: 20px;
       height: 20px;
