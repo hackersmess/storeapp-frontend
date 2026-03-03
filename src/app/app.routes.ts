@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { authGuard, loginGuard } from './guards/auth.guard';
+import { OAuthCallbackComponent } from './components/oauth-callback/oauth-callback.component';
 
 export const routes: Routes = [
 	{
@@ -13,6 +14,10 @@ export const routes: Routes = [
 		path: 'register',
 		component: RegisterComponent,
 		canActivate: [loginGuard]
+	},
+	{
+		path: 'oauth-callback',
+		component: OAuthCallbackComponent
 	},
 	{
 		path: '',

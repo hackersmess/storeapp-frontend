@@ -104,6 +104,10 @@ export class LoginComponent {
 		this.showPassword.update(value => !value);
 	}
 
+	loginWithGoogle(): void {
+		this.authService.loginWithGoogle();
+	}
+
 	// Getter per facilità accesso ai form controls
 	get email() { return this.loginForm.get('email'); }
 	get password() { return this.loginForm.get('password'); }

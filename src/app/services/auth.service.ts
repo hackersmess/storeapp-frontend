@@ -135,6 +135,30 @@ export class AuthService {
 	}
 
 	/**
+	 * Gestisce il successo del login OAuth2 (chiamato dal componente callback).
+	 * Salva i token e aggiorna lo stato utente senza fare redirect
+	 * (il redirect viene fatto dal componente).
+	 */
+	handleOAuthSuccess(token: string, refreshToken: string, user: UserDto): void {
+		if (this.isBrowser) {
+			localStorage.setItem(this.TOKEN_KEY, token);
+			localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+			localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+		}
+		this.currentUserSubject.next(user);
+	}
+
+	/**
+	 * Avvia il flusso OAuth2 con Google.
+	 * Reindirizza il browser al backend che poi reindirizza a Google.
+	 */
+	loginWithGoogle(): void {
+		if (this.isBrowser) {
+			window.location.href = 'http://localhost:8080/api/auth/oauth2/google';
+		}
+	}
+
+	/**
 	 * Ottiene il token JWT
 	 */
 	getToken(): string | null {
