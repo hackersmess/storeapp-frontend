@@ -3,7 +3,15 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthResponse, LoginRequest, RegisterRequest, UserDto } from '../models/auth.model';
+import {
+	AuthResponse,
+	ForgotPasswordRequest,
+	LoginRequest,
+	MessageResponse,
+	RegisterRequest,
+	ResetPasswordRequest,
+	UserDto
+} from '../models/auth.model';
 
 @Injectable({
 	providedIn: 'root'
@@ -95,6 +103,20 @@ export class AuthService {
 		return this.http.post<AuthResponse>(`${this.API_URL}/refresh`, { refreshToken }).pipe(
 			tap(response => this.handleAuthResponse(response))
 		);
+	}
+
+	/**
+	 * Richiede invio email per reset password.
+	 */
+	forgotPassword(request: ForgotPasswordRequest): Observable<MessageResponse> {
+		return this.http.post<MessageResponse>(`${this.API_URL}/forgot-password`, request);
+	}
+
+	/**
+	 * Completa reset password con token ricevuto via email.
+	 */
+	resetPassword(request: ResetPasswordRequest): Observable<MessageResponse> {
+		return this.http.post<MessageResponse>(`${this.API_URL}/reset-password`, request);
 	}
 
 	/**

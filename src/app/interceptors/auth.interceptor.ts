@@ -12,7 +12,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 	// Non aggiungere token alle richieste di auth
 	if (req.url.includes('/api/auth/login') ||
-		req.url.includes('/api/auth/register')) {
+		req.url.includes('/api/auth/register') ||
+		req.url.includes('/api/auth/forgot-password') ||
+		req.url.includes('/api/auth/reset-password')) {
 		return next(req);
 	}
 

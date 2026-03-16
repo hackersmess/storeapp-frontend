@@ -16,6 +16,22 @@ export const routes: Routes = [
 		canActivate: [loginGuard]
 	},
 	{
+		path: 'forgot-password',
+		loadComponent: () =>
+			import('./components/forgot-password/forgot-password.component').then(
+				(m) => m.ForgotPasswordComponent
+			),
+		canActivate: [loginGuard]
+	},
+	{
+		path: 'reset-password',
+		loadComponent: () =>
+			import('./components/reset-password/reset-password.component').then(
+				(m) => m.ResetPasswordComponent
+			),
+		canActivate: [loginGuard]
+	},
+	{
 		path: 'oauth-callback',
 		component: OAuthCallbackComponent
 	},
